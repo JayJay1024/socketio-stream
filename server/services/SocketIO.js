@@ -45,7 +45,6 @@ class SocketIO {
         });
 
         this.monitorSvc.on('NewAction', (actData) => {
-            console.log( 'socket.io rev new action' );
             this.handleIO.emit( 'NewBet', actData );
         });
     }

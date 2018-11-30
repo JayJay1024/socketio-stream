@@ -49,7 +49,6 @@ class MonitoringService extends event.EventEmitter {
                                         let data = trace.action_trace.act.data.res;
                                         this.svc.add(data);
 
-                                        console.log( 'new action' );
                                         this.emit('NewAction', data);
                                 }                        
                             }

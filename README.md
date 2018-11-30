@@ -12,6 +12,6 @@ $ sudo apt-get install -y nodejs
 $ npm install pm2 -g
 ```
 
-#### [server](./server)
+#### [Server](./server)
 
-#### [client demo](./client-demo)
+#### [Client Demo](./client-demo)
