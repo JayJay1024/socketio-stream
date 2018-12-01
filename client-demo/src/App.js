@@ -37,6 +37,11 @@ class App extends Component {
       socketHandle.on('NewBet', (data) => {
         console.log( 'new bet: ', data );
       });
+
+      // 连接后监听NewMine信息，接收挖矿结果
+      socketHandle.on('NewMine', (data) => {
+        console.log( 'new mine: ', data );
+      });
     });
 
     socketHandle.on('error', (err) => {

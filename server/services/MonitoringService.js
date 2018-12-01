@@ -4,6 +4,7 @@ const request = require('request')
 ,dayjs = require('dayjs')
 ,event = require('events');
 const GAMEACCOUNT = 'trustbetgame';
+const MINEACCOUNT = 'trustbetmine';
 
 
 class MonitoringService extends event.EventEmitter {
@@ -34,7 +35,7 @@ class MonitoringService extends event.EventEmitter {
                                 if(trace
                                     && trace.action_trace
                                     && trace.action_trace.act
-                                    && trace.action_trace.act.account === GAMEACCOUNT
+                                    && (trace.action_trace.act.account === GAMEACCOUNT || trace.action_trace.act.account === MINEACCOUNT)
                                     && trace.action_trace.act.name === 'result'
                                     && trace.action_trace.act.data
                                     && trace.action_trace.act.data.res
@@ -47,9 +48,13 @@ class MonitoringService extends event.EventEmitter {
                                         this.time = aTime ;
                                         this.lastUuid = trace.action_trace.act.data.res.uid;
                                         let data = trace.action_trace.act.data.res;
-                                        this.svc.add(data);
 
-                                        this.emit('NewAction', data);
+                                        if ( trace.action_trace.act.account === MINEACCOUNT ) {
+                                            this.emit('NewMine', data);
+                                        } else {
+                                            this.svc.add(data);
+                                            this.emit('NewBet', data);
+                                        }
                                 }                        
                             }
                         }
