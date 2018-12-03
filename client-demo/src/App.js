@@ -40,12 +40,18 @@ class App extends Component {
 
       // 连接后订阅NewBet消息，接收新的trustbetgame的result
       socketHandle.on('NewBet', (data) => {
+        // data字段如下：
+        // { player: 'aaaaaaaa3333',                       => 玩家
+        //   payin: '1.0000 EOS',                          => 下注金额
+        //   payout: '0.0000 EOS',                         => 获奖金额
+        //   txtime: 1543822106,                           => 下注时间
+        //   dice: { dice1: 6, dice2: 3, dice3: 1 },       => 色子点数
+        //   payed: 1,                                     => 0: 奖金未支付  1:奖金已支付
+        //   uid: '38d9ce31-a9df-4d62-ac46-5f532cc5256d',  => 下注id
+        //   detail: '0:10000:0',                          => 下注类型:下注金额:中奖金额
+        //   mine: '100.0000 TBT'                          => 挖矿所得
+        // }
         console.log( 'new bet: ', data );
-      });
-
-      // 连接后订阅NewMine信息，接收挖矿结果
-      socketHandle.on('NewMine', (data) => {
-        console.log( 'new mine: ', data );
       });
     });
 

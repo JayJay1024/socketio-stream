@@ -78,10 +78,6 @@ class SocketIO {
         this.monitorSvc.on('NewBet', (actData) => {
             this.handleIO.emit( 'NewBet', actData );
         });
-
-        this.monitorSvc.on('NewMine', (actData) => {
-            this.handleIO.emit( 'NewMine', actData );
-        });
     }
 }
 

@@ -15,7 +15,7 @@ class CacheService {
         });
     }
 
-    async add(data) {
+    async addBet(data) {
         try {
             const day = Math.floor(Date.now()/(1000 * 86400));
             const dailyRank = `r:${day}`;
@@ -62,7 +62,26 @@ class CacheService {
 
             return false;
         } catch(err) {
-            this.log.error('add', err);
+            this.log.error('add bet', err);
+        }
+    }
+
+    async addMine(data) {
+        try {
+            const uid    = data.uid;
+            const payout = data.payout;
+            await this.client.set(uid, payout, 'EX', 60);  // expire: 60s
+        } catch(err) {
+            this.log.error('add mine', err);
+        }
+    }
+
+    async getMine(uid) {
+        try {
+            const result = await this.client.get(uid);
+            return result;
+        } catch(err) {
+            this.log.error('get mine', err);
         }
     }
 

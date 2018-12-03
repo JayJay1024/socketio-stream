@@ -13,8 +13,7 @@ class MonitoringService extends event.EventEmitter {
         this.log = log;
         this.conf = conf;
         this.svc = cacheSvc;
-        this.time = 0;
-        this.lastUuid = '';
+        this.lastAseq = 0;
     }
 
     start() {
@@ -22,16 +21,20 @@ class MonitoringService extends event.EventEmitter {
         this.actionsHandler();
     }
 
-    actionsHandler(pos = -1, offset = -200) {
+    actionsHandler(pos = -1, offset = -20) {
         try {
-            request.post({url: this.conf.getActionsUrl, method:'POST', json:true, body: {account_name: GAMEACCOUNT, pos: pos, offset: offset}}, (err,res,body) => {
+            request.post({url: this.conf.getActionsUrl, method:'POST', json:true, body: {account_name: GAMEACCOUNT, pos: pos, offset: offset}}, async (err,res,body) => {
                 if(!err && res.statusCode == 200){
                     if(body.actions && body.actions.length && body.actions.length > 0)
                     { 
-                        let bTime = dayjs(body.actions[body.actions.length-1].action_trace.block_time).valueOf();
-                        if(bTime >= this.time) { //不同actions,同一区块时间相等
+                        let latestAseq = body.actions[body.actions.length-1].account_action_seq;
+
+                        if ( latestAseq > this.lastAseq ) {
                             for (let i = 0; i < body.actions.length; i++) {
                                 const trace = body.actions[i];
+
+                                if ( trace.account_action_seq <= this.lastAseq ) { continue; }
+
                                 if(trace
                                     && trace.action_trace
                                     && trace.action_trace.act
@@ -41,22 +44,27 @@ class MonitoringService extends event.EventEmitter {
                                     && trace.action_trace.act.data.res
                                     && trace.action_trace.receipt
                                     && trace.action_trace.receipt.receiver === GAMEACCOUNT) {                                    
-                                        let aTime = dayjs(trace.action_trace.block_time).valueOf();
-                                        if(aTime < this.time || this.lastUuid == trace.action_trace.act.data.res.uid) {   
-                                            continue;
-                                        }
-                                        this.time = aTime ;
-                                        this.lastUuid = trace.action_trace.act.data.res.uid;
+
                                         let data = trace.action_trace.act.data.res;
 
                                         if ( trace.action_trace.act.account === MINEACCOUNT ) {
-                                            this.emit('NewMine', data);
+                                            this.svc.addMine(data);
                                         } else {
-                                            this.svc.add(data);
+                                            this.svc.addBet(data);
+
+                                            let payMine = await this.svc.getMine(data.uid);
+                                            if ( payMine ) {
+                                                data.mine = payMine;
+                                            } else {
+                                                data.mine = '0.0000 TBT';
+                                            }
+
                                             this.emit('NewBet', data);
                                         }
                                 }                        
                             }
+
+                            this.lastAseq = latestAseq;
                         }
                     }
                 } 
