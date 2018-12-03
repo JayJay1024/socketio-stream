@@ -23,22 +23,27 @@ class App extends Component {
     socketHandle.on('connect', () => {
       console.log( 'socket.io connected' );
 
-      // 连接上后监听EosDailyRank消息，接收EOS下注日排行榜
+      // 连接上后订阅EosDailyRank消息，接收EOS下注日排行榜
       socketHandle.on('EosDailyRank', (data) => {
         console.log( 'eos daily rank: ', data );
       });
 
-      // 连接上后监听TrustBetList消息，接收平台游戏下注记录
+      // 连接上后订阅TrustBetList消息，接收平台游戏下注记录
       socketHandle.on('TrustBetList', (data) => {
         console.log( 'trust bet list: ', data );
       });
 
-      // 连接后监听NewBet消息，接收新的trustbetgame的result
+      // 连接上后订阅MinerTop消息，接收挖矿排行榜
+      socketHandle.on('MinerTop', (data) => {
+        console.log( 'miner top 20: ', data );
+      });
+
+      // 连接后订阅NewBet消息，接收新的trustbetgame的result
       socketHandle.on('NewBet', (data) => {
         console.log( 'new bet: ', data );
       });
 
-      // 连接后监听NewMine信息，接收挖矿结果
+      // 连接后订阅NewMine信息，接收挖矿结果
       socketHandle.on('NewMine', (data) => {
         console.log( 'new mine: ', data );
       });
@@ -54,7 +59,7 @@ class App extends Component {
     e.preventDefault();
 
     if ( socketHandle && socketHandle.connected ) {
-      // 先监听PlayerBetList消息，等下发送Login后这里就会收到玩家下注记录
+      // 先订阅PlayerBetList消息，等下发送Login后这里就会收到玩家下注记录
       socketHandle.on('PlayerBetList', (data) => {
         console.log( 'player bet list: ', data );
       });

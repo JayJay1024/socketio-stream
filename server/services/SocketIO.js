@@ -2,6 +2,7 @@ const Koa = require('koa');
 const app = new Koa();
 const router = require('koa-router')();
 const server = require('http').Server(app.callback());
+const fetch = require('node-fetch');
 
 router.get('/', async (ctx, next) => {
     ctx.response.body = `<h1>stream server version v1 ^_^</h1>`;
@@ -16,6 +17,34 @@ class SocketIO {
         this.handleIO = require('socket.io')(server);
 
         server.listen(conf.socketioPort);
+    }
+
+    async minertop( socket ) {
+        let fetch_url  = 'http://data.trust.bet/v1/history/get_mine_table';
+        let fetch_opts = {
+            method: 'POST',
+            body: JSON.stringify({'name':'trustbetmine'}),
+        };
+
+        fetch( fetch_url, fetch_opts )
+            .then(response => response.json())
+            .then(res_json => {
+                let after_sort = res_json.results;
+
+                if ( after_sort.length > 0 ) {
+                    after_sort = res_json.results.sort((a, b) => {
+                        return (b.balance[0].split(' ')[0] * 1 - a.balance[0].split(' ')[0] * 1);  // 降序
+                    });
+                }
+                let miner_top = after_sort.slice(0, 20);  // top 20
+
+                if ( socket && socket.connected ) {
+                    socket.emit( 'MinerTop', miner_top );
+                }
+            })
+            .catch(err => {
+                this.log.error( 'fetch miner top error: ', err );
+            });
     }
 
     async init() {
@@ -34,6 +63,8 @@ class SocketIO {
                     socket.emit( 'PlayerBetList', playerBetList );
                 }
             });
+
+            this.minertop( socket );
 
             let trustBetList = await this.svc.getAcitons( 'trustbetgame' );
             let eosDailyRank = await this.svc.getEosDailyRank();
