@@ -89,7 +89,25 @@ class CacheService {
         try {
             const dailyRank = `r:${Math.floor(Date.now()/(1000 * 86400))}`;
             const result = await this.client.zrevrange(dailyRank, 0, 99, 'WITHSCORES');
-            return result;
+            const len = result.length;
+
+            if ( len % 2 === 0 ) {
+                let row  = {}; 
+                let rank = [];
+
+                for ( let i = 0; i < len; i++ ) {
+                    if ( i % 2 ) {
+                        row.balance = result[i];
+                        rank.push(row);
+                    } else {
+                        row.name = result[i];
+                    }
+                }
+
+                return rank;
+            } else {
+                return [];
+            }
         } catch(err) {
             this.log.error('geteosDailyRank', err);
         }     
