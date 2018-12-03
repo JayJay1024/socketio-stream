@@ -92,15 +92,13 @@ class CacheService {
             const len = result.length;
 
             if ( len % 2 === 0 ) {
-                let row  = {}; 
                 let rank = [];
 
                 for ( let i = 0; i < len; i++ ) {
                     if ( i % 2 ) {
-                        row.balance = result[i];
-                        rank.push(row);
+                        rank[rank.length - 1].balance = result[i];
                     } else {
-                        row.name = result[i];
+                        rank.push( {name: result[i]} );
                     }
                 }
 
