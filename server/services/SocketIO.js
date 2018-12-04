@@ -57,7 +57,6 @@ class SocketIO {
 
             socket.on('disconnect', () => {
                 if ( handleLoop ) {
-                    console.log('clean loop');
                     clearInterval( handleLoop );
                 }
 
@@ -81,7 +80,6 @@ class SocketIO {
             }
 
             handleLoop = setInterval(async () => {
-                console.log('loop');
                 let latestRank = await this.svc.getEosDailyRank();
                 if ( latestRank &&
                      socket.connected &&
