@@ -49,10 +49,18 @@ class SocketIO {
 
     async init() {
         this.handleIO.on('connection', async (socket) => {
+            let lastRank = null;
+            let handleLoop = null;  // EOS Daily Rank Loop
+
             let origin = socket.handshake.headers.origin;
             this.log.info( `connection: ${origin}` );
 
             socket.on('disconnect', () => {
+                if ( handleLoop ) {
+                    console.log('clean loop');
+                    clearInterval( handleLoop );
+                }
+
                 this.log.info( `disconnect: ${origin}` );
             });
 
@@ -67,12 +75,22 @@ class SocketIO {
             this.minertop( socket );
 
             let trustBetList = await this.svc.getAcitons( 'trustbetgame' );
-            let eosDailyRank = await this.svc.getEosDailyRank();
 
             if ( socket.connected ) {
-                if ( eosDailyRank )  { socket.emit( 'EosDailyRank', eosDailyRank ); }
                 if ( trustBetList )  { socket.emit( 'TrustBetList', trustBetList ); }
             }
+
+            handleLoop = setInterval(async () => {
+                console.log('loop');
+                let latestRank = await this.svc.getEosDailyRank();
+                if ( latestRank &&
+                     socket.connected &&
+                     JSON.stringify(lastRank) !== JSON.stringify(latestRank) )  {
+
+                    lastRank = latestRank;
+                    socket.emit( 'EosDailyRank', latestRank );
+                }
+            }, 3000);  // 3s
         });
 
         this.monitorSvc.on('NewBet', (actData) => {
