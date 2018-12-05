@@ -19,33 +19,33 @@ class SocketIO {
         server.listen(conf.socketioPort);
     }
 
-    async minertop( socket ) {
-        let fetch_url  = 'http://data.trust.bet/v1/history/get_mine_table';
-        let fetch_opts = {
-            method: 'POST',
-            body: JSON.stringify({'name':'trustbetmine'}),
-        };
+    // async minertop( socket ) {
+    //     let fetch_url  = 'http://data.trust.bet/v1/history/get_mine_table';
+    //     let fetch_opts = {
+    //         method: 'POST',
+    //         body: JSON.stringify({'name':'trustbetmine'}),
+    //     };
 
-        fetch( fetch_url, fetch_opts )
-            .then(response => response.json())
-            .then(res_json => {
-                let after_sort = res_json.results;
+    //     fetch( fetch_url, fetch_opts )
+    //         .then(response => response.json())
+    //         .then(res_json => {
+    //             let after_sort = res_json.results;
 
-                if ( after_sort.length > 0 ) {
-                    after_sort = res_json.results.sort((a, b) => {
-                        return (b.balance[0].split(' ')[0] * 1 - a.balance[0].split(' ')[0] * 1);  // 降序
-                    });
-                }
-                let miner_top = after_sort.slice(0, 20);  // top 20
+    //             if ( after_sort.length > 0 ) {
+    //                 after_sort = res_json.results.sort((a, b) => {
+    //                     return (b.balance[0].split(' ')[0] * 1 - a.balance[0].split(' ')[0] * 1);  // 降序
+    //                 });
+    //             }
+    //             let miner_top = after_sort.slice(0, 20);  // top 20
 
-                if ( socket && socket.connected ) {
-                    socket.emit( 'MinerTop', miner_top );
-                }
-            })
-            .catch(err => {
-                this.log.error( 'fetch miner top error: ', err );
-            });
-    }
+    //             if ( socket && socket.connected ) {
+    //                 socket.emit( 'MinerTop', miner_top );
+    //             }
+    //         })
+    //         .catch(err => {
+    //             this.log.error( 'fetch miner top error: ', err );
+    //         });
+    // }
 
     async init() {
         this.handleIO.on('connection', async (socket) => {
@@ -71,7 +71,7 @@ class SocketIO {
                 }
             });
 
-            this.minertop( socket );
+            // this.minertop( socket );
 
             let trustBetList = await this.svc.getAcitons( 'trustbetgame' );
 
