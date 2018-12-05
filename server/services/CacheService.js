@@ -88,7 +88,7 @@ class CacheService {
     async getEosDailyRank() {
         try {
             const dailyRank = `r:${Math.floor(Date.now()/(1000 * 86400))}`;
-            const result = await this.client.zrevrange(dailyRank, 0, 99, 'WITHSCORES');
+            const result = await this.client.zrevrange(dailyRank, 0, 9, 'WITHSCORES');
             const len = result.length;
 
             if ( len % 2 === 0 ) {
