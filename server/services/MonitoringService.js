@@ -21,7 +21,7 @@ class MonitoringService extends event.EventEmitter {
         this.actionsHandler();
     }
 
-    actionsHandler(pos = -1, offset = -20) {
+    actionsHandler(pos = -1, offset = -200) {
         try {
             request.post({url: this.conf.getActionsUrl, method:'POST', json:true, body: {account_name: GAMEACCOUNT, pos: pos, offset: offset}}, async (err,res,body) => {
                 if(!err && res.statusCode == 200){
