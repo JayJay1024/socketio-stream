@@ -76,10 +76,15 @@ class CacheService {
         }
     }
 
-    async getMine(uid) {
+    async getMine(uid, callback) {
         try {
-            const result = await this.client.get(uid);
-            return result;
+            this.client.get(uid, (err,res) => {
+                if(err) {
+                    this.log.error('get mine', err);
+                }else {
+                    callback(res);
+                }
+            });
         } catch(err) {
             this.log.error('get mine', err);
         }

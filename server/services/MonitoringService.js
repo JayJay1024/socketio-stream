@@ -23,7 +23,7 @@ class MonitoringService extends event.EventEmitter {
 
     actionsHandler(pos = -1, offset = -200) {
         try {
-            request.post({url: this.conf.getActionsUrl, method:'POST', json:true, body: {account_name: GAMEACCOUNT, pos: pos, offset: offset}}, async (err,res,body) => {
+            request.post({url: this.conf.getActionsUrl, method:'POST', json:true, body: {account_name: GAMEACCOUNT, pos: pos, offset: offset}}, (err,res,body) => {
                 if(!err && res.statusCode == 200){
                     if(body.actions && body.actions.length && body.actions.length > 0)
                     { 
@@ -50,16 +50,17 @@ class MonitoringService extends event.EventEmitter {
                                         if ( trace.action_trace.act.account === MINEACCOUNT ) {
                                             this.svc.addMine(data);
                                         } else {
-                                            this.svc.addBet(data);
+                                            this.svc.getMine(data.uid, (payMine) => {
+                                                if ( payMine ) {
+                                                    data.mine = payMine;
+                                                } else {
+                                                    data.mine = '0.0000 TBT';
+                                                }
 
-                                            let payMine = await this.svc.getMine(data.uid);
-                                            if ( payMine ) {
-                                                data.mine = payMine;
-                                            } else {
-                                                data.mine = '0.0000 TBT';
-                                            }
+                                                this.svc.addBet(data);
 
-                                            this.emit('NewBet', data);
+                                                this.emit('NewBet', data);
+                                            });
                                         }
                                 }                        
                             }
