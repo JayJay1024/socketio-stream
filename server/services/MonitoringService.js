@@ -31,7 +31,7 @@ class MonitoringService extends event.EventEmitter {
 
                         if ( latestAseq > this.lastAseq ) {
                             for (let i = 0; i < body.actions.length; i++) {
-                                const trace = body.actions[i];
+                                let trace = body.actions[i];
 
                                 if ( trace.account_action_seq <= this.lastAseq ) { continue; }
 
