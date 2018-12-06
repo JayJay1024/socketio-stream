@@ -68,13 +68,18 @@ class MonitoringService extends event.EventEmitter {
                             this.lastAseq = latestAseq;
                         }
                     }
-                } 
+                    setTimeout(() => {
+                        this.actionsHandler(this.lastAseq + 1, 200);
+                    }, 50);
+                } else {
+                    setTimeout(() => {
+                        this.actionsHandler(pos, offset);
+                    }, 50);
+                }
             });  
         } catch(err) {
             this.log.error('actionsHandler', err);
-        }
-        finally {
-            setTimeout(()=>this.actionsHandler(), 100);
+            this.actionsHandler(pos, offset);
         }
     }
 }
