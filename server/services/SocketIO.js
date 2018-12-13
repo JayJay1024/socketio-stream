@@ -73,11 +73,23 @@ class SocketIO {
 
             // this.minertop( socket );
 
-            let trustBetList = await this.svc.getAcitons( 'trustbetgame' );
+            setImmediate(async () => {         
+                //发送排行榜
+                let latestRank = await this.svc.getEosDailyRank();
+                if ( latestRank &&
+                     socket.connected &&
+                     JSON.stringify(lastRank) !== JSON.stringify(latestRank) )  {
 
-            if ( socket.connected ) {
-                if ( trustBetList )  { socket.emit( 'TrustBetList', trustBetList ); }
-            }
+                    lastRank = latestRank;
+                    socket.emit( 'EosDailyRank', latestRank );
+                }
+
+                //发送所有投注
+                let trustBetList = await this.svc.getAcitons( 'trustbetgame' );    
+                if ( socket.connected ) {
+                    if ( trustBetList )  { socket.emit( 'TrustBetList', trustBetList ); }
+                }       
+            });
 
             handleLoop = setInterval(async () => {
                 let latestRank = await this.svc.getEosDailyRank();
