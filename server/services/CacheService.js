@@ -49,8 +49,8 @@ class CacheService {
 
                  if(payins[1] == 'EOS' && day == bDay) {
                     this.client.zincrby(dailyRank, parseFloat(payins[0]), play);
+                    this.client.expire(dailyRank, EXPIRETS);
                  }
-                 this.client.expire(pKey, dailyRank);
 
                 var res = await this.client.exec();
 
