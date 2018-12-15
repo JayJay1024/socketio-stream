@@ -10,10 +10,14 @@ router.get('/', async (ctx, next) => {
 app.use(router.routes());
 
 class SocketIO {
-    constructor( conf, log, cacheSvc, monitorSvc) {
+    constructor( conf, log, cacheSvc, cacheChatSvc, comSvc, monitorSvc, monChatSvc ) {
         this.log = log;
         this.svc = cacheSvc;
+        this.cacheChatSvc = cacheChatSvc;
+        this.comSvc = comSvc;
         this.monitorSvc = monitorSvc;
+        this.monChatSvc = monChatSvc;
+
         this.handleIO = require('socket.io')(server);
 
         server.listen(conf.socketioPort);
@@ -47,7 +51,7 @@ class SocketIO {
     //         });
     // }
 
-    async init() {
+    async start() {
         this.handleIO.on('connection', async (socket) => {
             let lastRank = null;
             let handleLoop = null;  // EOS Daily Rank Loop
@@ -71,11 +75,31 @@ class SocketIO {
                 }
             });
 
+            // 推送聊天记录
+            socket.on('getChatList', async () => {
+                let _key = 'chat:trustbetchat';
+                let _listChat = await this.cacheChatSvc.getChats(_key);
+
+                if ( _listChat && socket.connected ) {
+                    socket.emit( 'ChatList', _listChat );
+                }
+            });
+
+            // 推送中奖记录
+            socket.on('getChatResultList', async () => {
+                let _key = 'results:trustbetchat';
+                let _listChatResult = await this.cacheChatSvc.getResults();
+
+                if ( _listChatResult && socket.connected ) {
+                    socket.emit( 'ChatResultList', _listChatResult );
+                }
+            });
+
             // this.minertop( socket );
 
             setImmediate(async () => {         
                 //发送排行榜
-                let latestRank = await this.svc.getEosDailyRank();
+                let latestRank = await this.comSvc.getEosDailyRank();
                 if ( latestRank &&
                      socket.connected &&
                      JSON.stringify(lastRank) !== JSON.stringify(latestRank) )  {
@@ -92,7 +116,7 @@ class SocketIO {
             });
 
             handleLoop = setInterval(async () => {
-                let latestRank = await this.svc.getEosDailyRank();
+                let latestRank = await this.comSvc.getEosDailyRank();
                 if ( latestRank &&
                      socket.connected &&
                      JSON.stringify(lastRank) !== JSON.stringify(latestRank) )  {
@@ -105,6 +129,14 @@ class SocketIO {
 
         this.monitorSvc.on('NewBet', (actData) => {
             this.handleIO.emit( 'NewBet', actData );
+        });
+        this.monChatSvc.on('NewChat', (actData) => {
+            let _NewChats = [];
+            _NewChats.push(actData);
+            this.handleIO.emit( 'NewChats', _NewChats );
+        });
+        this.monChatSvc.on('NewChatResult', (actData) => {
+            this.handleIO.emit( 'NewChatResult', actData );
         });
     }
 }

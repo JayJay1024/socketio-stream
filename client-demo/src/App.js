@@ -53,6 +53,38 @@ class App extends Component {
         // }
         console.log( 'new bet: ', data );
       });
+
+      // 连接后订阅NewChat消息，接收 "废话链天" 弹幕
+      socketHandle.on('NewChats', (data) => {
+        // data是包含如下字段的数组：
+        // {
+        //   from: 'aaaaaaaa2222',                         => 玩家
+        //   to: 'trustbetchat',                           => 合约
+        //   quantity: '0.1000 EOS',                       => 金额
+        //   memo: '梭哈 梭哈',                             =>  弹幕
+        //   block_time: '2018-12-14T06:45:41.500'         => 弹幕时间
+        // }
+        console.log( 'new chat: ', data );
+      });
+
+      // 订阅ChatList，接收聊天记录
+      socketHandle.on('ChatList', (data) => {
+        console.log('chat list: ', data);
+      });
+      // 请求聊天记录
+      socketHandle.emit('getChatList');
+
+      // 订阅NewChatResult，接收新的开奖
+      socketHandle.on('NewChatResult', (data) => {
+        console.log('new chat result: ', data);
+      });
+
+      // 订阅ChatResultList，接收中奖记录
+      socketHandle.on('ChatResultList', (data) => {
+        console.log('chat result list: ', data);
+      });
+      // 请求中奖记录
+      socketHandle.emit('getChatResultList');
     });
 
     socketHandle.on('error', (err) => {
