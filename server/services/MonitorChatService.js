@@ -42,18 +42,18 @@ class MonitorChatService extends event.EventEmitter {
                                     && trace.action_trace
                                     && trace.action_trace.act
                                     && trace.action_trace.act.data
-                                    && (
-                                        (trace.action_trace.act.account === 'eosio.token' && trace.action_trace.act.name === 'transfer' && trace.action_trace.act.data.to === this.gameContract) ||  //弹幕action
-                                        (trace.action_trace.act.account === this.gameContract && trace.action_trace.act.name === 'resultr')  // 开奖action
-                                       )
+                                    && trace.action_trace.act.data.res
+                                    && trace.action_trace.act.account
+                                    && trace.action_trace.act.account === this.gameContract
+                                    && (trace.action_trace.act.name === 'resultp' || trace.action_trace.act.name === 'resultr')
                                     && trace.action_trace.receipt
                                     && trace.action_trace.receipt.receiver === this.gameContract ) {
 
-                                    let data = trace.action_trace.act.data;
+                                    let data = trace.action_trace.act.data.res;
                                     data.trx_id = trace.trx_id;
                                     data.block_time = trace.block_time;
 
-                                    if ( trace.action_trace.act.name === 'transfer' ) {  // 弹幕
+                                    if ( trace.action_trace.act.name === 'resultp' ) {  // 弹幕
                                         this.cacheSvc.addChat( data );
                                         this.emit( 'NewChat', data );
                                     } else if ( trace.action_trace.act.name === 'resultr' ) {  // 中奖结果

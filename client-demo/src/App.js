@@ -58,8 +58,7 @@ class App extends Component {
       socketHandle.on('NewChats', (data) => {
         // data是包含如下字段的数组：
         // {
-        //   from: 'aaaaaaaa2222',                         => 玩家
-        //   to: 'trustbetchat',                           => 合约
+        //   player: 'aaaaaaaa2222',                       => 玩家
         //   quantity: '0.1000 EOS',                       => 金额
         //   memo: '梭哈 梭哈',                             =>  弹幕
         //   block_time: '2018-12-14T06:45:41.500'         => 弹幕时间

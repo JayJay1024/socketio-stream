@@ -15,14 +15,14 @@ class CacheChatService {
 
     async addChat(data) {
         try {
-            if ( data && data.from && data.to && data.quantity && data.memo && data.block_time ) {
-                let _player   = data.from;
+            if ( data && data.player && data.quantity && data.memo && data.block_time ) {
+                let _player   = data.player;
                 let _quantity = data.quantity.split(' ');
                 let _today    = Math.floor(Date.now()/(1000 * 86400));
 
                 let _keyDailyRank   = `r:${_today}`;                    // 日排行榜
                 let _keyGameChats   = `chat:${this.gameContract}`;      // 所有玩家的记录
-                let _keyPlayerChats = `player:${data.from}`;            // 每个玩家的记录
+                let _keyPlayerChats = `player:${_player}`;              // 每个玩家的记录
 
                 let _data  = JSON.stringify(data);
                 let _retry = Math.floor(Date.now() / 1000) + 5;
