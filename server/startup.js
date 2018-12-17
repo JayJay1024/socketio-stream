@@ -2,7 +2,7 @@
 
 const Ioc = require('./tools/Ioc')
 ,log = require('./tools/logHelper')
-,conf = require('./config/sicbo-push.conf')
+,conf = require('./config/sicbo-push')
 ,CacheService = require('./services/CacheService')
 ,CacheChatService = require('./services/CacheChatService')
 ,CommonService = require('./services/CommonService')
