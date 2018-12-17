@@ -64,7 +64,7 @@ class SocketIO {
                     clearInterval( handleLoop );
                 }
 
-                this.log.info( `disconnect: ${origin}` );
+                // this.log.info( `disconnect: ${origin}` );
             });
 
             socket.on('Login', async (player) => {
