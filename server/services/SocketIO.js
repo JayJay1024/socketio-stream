@@ -57,7 +57,7 @@ class SocketIO {
             let handleLoop = null;  // EOS Daily Rank Loop
 
             let origin = socket.handshake.headers.origin;
-            this.log.info( `connection: ${origin}` );
+            // this.log.info( `connection: ${origin}` );
 
             socket.on('disconnect', () => {
                 if ( handleLoop ) {
