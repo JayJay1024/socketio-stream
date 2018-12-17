@@ -60,6 +60,7 @@ class CacheService {
                 }
             }
 
+            this.log.warnning('bet data not save: ', data);
             return false;
         } catch(err) {
             this.log.error('add bet', err);

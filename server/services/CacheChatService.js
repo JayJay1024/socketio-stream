@@ -57,6 +57,7 @@ class CacheChatService {
                 this.log.error('add chat but data format error, data: ', data);
             }
 
+            this.log.warnning('chat data not save: ', data);
             return false;
         } catch(err) {
             this.log.error('add chat fail: ', err);
