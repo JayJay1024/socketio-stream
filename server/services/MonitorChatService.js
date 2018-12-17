@@ -49,9 +49,9 @@ class MonitorChatService extends event.EventEmitter {
                                     && trace.action_trace.receipt
                                     && trace.action_trace.receipt.receiver === this.gameContract ) {
 
-                                    let data = trace.action_trace.act.data.res;
-                                    data.trx_id = trace.trx_id;
-                                    data.block_time = trace.block_time;
+                                    let data        = trace.action_trace.act.data.res;
+                                    data.trx_id     = trace.action_trace.trx_id;
+                                    data.block_time = trace.action_trace.block_time;
 
                                     if ( trace.action_trace.act.name === 'resultp' ) {  // 弹幕
                                         this.cacheSvc.addChat( data );
