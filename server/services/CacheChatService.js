@@ -49,7 +49,7 @@ class CacheChatService {
 
                     let _ret = await this.client.exec();
                     if ( _ret ) {
-                        this.log.info('add chat success: ', data);
+                        this.log.info('add chat success: ', _data);
                         return true;
                     }
                 }
@@ -88,7 +88,7 @@ class CacheChatService {
 
                     let _ret = await this.client.exec();
                     if ( _ret ) {
-                        this.log.info('add chat result success: ', data);
+                        this.log.info('add chat result success: ', _data);
                         return true;
                     }
                 }
