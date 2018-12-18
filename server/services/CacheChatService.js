@@ -15,7 +15,7 @@ class CacheChatService {
 
     async addChat(data) {
         try {
-            if ( data && data.player && data.quantity && data.memo && data.block_time ) {
+            if ( data && data.player && data.quantity && data.block_time ) {
                 let _player   = data.player;
                 let _quantity = data.quantity.split(' ');
                 let _today    = Math.floor(Date.now()/(1000 * 86400));
@@ -57,6 +57,7 @@ class CacheChatService {
                 this.log.error('add chat but data format error, data: ', data);
             }
 
+            this.log.warnning('chat data not save: ', data);
             return false;
         } catch(err) {
             this.log.error('add chat fail: ', err);
@@ -103,9 +104,9 @@ class CacheChatService {
         }
     }
 
-    async getChats(key) {
+    async getChats(key, start=0) {
         try {
-            let _result = await this.client.zrevrange(key, 0, 19);
+            let _result = await this.client.zrevrange(key, start, start+19);  // 20条记录
             return _result;
         } catch(err) {
             this.log.error('get chats fail: ', err);

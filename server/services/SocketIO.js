@@ -53,10 +53,11 @@ class SocketIO {
 
     async start() {
         this.handleIO.on('connection', async (socket) => {
+            let chatListStart = 0;
             let lastRank = null;
             let handleLoop = null;  // EOS Daily Rank Loop
 
-            let origin = socket.handshake.headers.origin;
+            // let origin = socket.handshake.headers.origin;
             // this.log.info( `connection: ${origin}` );
 
             socket.on('disconnect', () => {
@@ -78,10 +79,11 @@ class SocketIO {
             // 推送聊天记录
             socket.on('getChatList', async () => {
                 let _key = 'chat:trustbetchat';
-                let _listChat = await this.cacheChatSvc.getChats(_key);
+                let _listChat = await this.cacheChatSvc.getChats(_key, chatListStart);
 
                 if ( _listChat && socket.connected ) {
                     socket.emit( 'ChatList', _listChat );
+                    chatListStart += 20;  // 20条记录
                 }
             });
 
