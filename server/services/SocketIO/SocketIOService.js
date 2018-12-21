@@ -113,7 +113,7 @@ class SocketIOService {
                 }
 
                 //发送所有投注
-                let trustBetList = await this.cacheSvc.getAcitons( 'trustbetgame' );    
+                let trustBetList = await this.cacheSvc.getSicRecords( 'trustbetgame' );
                 if ( socket.connected ) {
                     if ( trustBetList )  { socket.emit( 'TrustBetList', trustBetList ); }
                 }       

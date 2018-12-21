@@ -15,12 +15,12 @@ module.exports = {
     env: {
       NODE_ENV: 'development',
       CONFIG_PATH: `${ROOTDIR}/services/SocketIO/config.js`,
-      LOG_PATH: `${ROOTDIR}/logs/socketio.log`,
+      LOG_PATH: `${ROOTDIR}/logs/socketio/log.log`,
     },
     env_production: {
       NODE_ENV: 'production',
       CONFIG_PATH: `${ROOTDIR}/services/SocketIO/config.js`,
-      LOG_PATH: `${ROOTDIR}/logs/socketio.log`,
+      LOG_PATH: `${ROOTDIR}/logs/socketio/log.log`,
     }
   }, {
     name: 'Chat',
@@ -34,12 +34,12 @@ module.exports = {
     env: {
       NODE_ENV: 'development',
       CONFIG_PATH: `${ROOTDIR}/services/Chat/config.js`,
-      LOG_PATH: `${ROOTDIR}/logs/chat.log`,
+      LOG_PATH: `${ROOTDIR}/logs/chat/log.log`,
     },
     env_production: {
       NODE_ENV: 'production',
       CONFIG_PATH: `${ROOTDIR}/services/Chat/config.js`,
-      LOG_PATH: `${ROOTDIR}/logs/chat.log`,
+      LOG_PATH: `${ROOTDIR}/logs/chat/log.log`,
     }
   }, {
     name: 'Sicbo',
@@ -53,12 +53,12 @@ module.exports = {
     env: {
       NODE_ENV: 'development',
       CONFIG_PATH: `${ROOTDIR}/services/SicBo/config.js`,
-      LOG_PATH: `${ROOTDIR}/logs/sicbo.log`,
+      LOG_PATH: `${ROOTDIR}/logs/sicbo/log.log`,
     },
     env_production: {
       NODE_ENV: 'production',
       CONFIG_PATH: `${ROOTDIR}/services/SicBo/config.js`,
-      LOG_PATH: `${ROOTDIR}/logs/sicbo.log`,
+      LOG_PATH: `${ROOTDIR}/logs/sicbo/log.log`,
     }
   }],
 };
