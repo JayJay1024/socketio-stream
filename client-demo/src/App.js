@@ -7,12 +7,6 @@ const socketSvr = 'http://localhost:8080';
 var socketHandle = null;
 
 class App extends Component {
-  constructor(props) {
-    super(props);
-
-    this.openGame     = this.openGame.bind(this);
-    this.playerLogin  = this.playerLogin.bind(this);
-  }
 
   // 模拟打开游戏页面
   openGame = (e) => {
@@ -70,8 +64,6 @@ class App extends Component {
       socketHandle.on('ChatList', (data) => {
         console.log('chat list: ', data);
       });
-      // 请求聊天记录
-      socketHandle.emit('getChatList');
 
       // 订阅NewChatResult，接收新的开奖
       socketHandle.on('NewChatResult', (data) => {
@@ -109,6 +101,22 @@ class App extends Component {
     }
   }
 
+  // 请求聊天记录
+  getChatList = (e) => {
+    e.preventDefault();
+
+    if ( socketHandle && socketHandle.connected ) {
+        // startt 和 records 这两个参数名是固定的
+        let getChatListParams = {
+          startt: Math.floor(Date.now()/1000),  // 开始时间，单位：秒
+          records: 10,                          // 从 startt 时间往后的多少条记录
+        }
+        socketHandle.emit('getChatList', JSON.stringify(getChatListParams));
+    } else {
+      alert( 'open the game first~' );
+    }
+  }
+
 
   render() {
     return (
@@ -118,6 +126,9 @@ class App extends Component {
         </button>
         <button onClick={this.playerLogin} className='my-btn'>
           Player Login
+        </button>
+        <button onClick={this.getChatList} className='my-btn'>
+          Get ChatList
         </button>
       </div>
     );

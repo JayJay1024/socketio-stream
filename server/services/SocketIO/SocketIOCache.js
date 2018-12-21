@@ -50,9 +50,16 @@ class SocketIOCache {
         }
     }
 
-    async getChats(key, start=0) {
+    async getChats(key, params=null) {
         try {
-            let _result = await this.redis.client.zrevrange(key, start, start+19);  // 20条记录
+            let _result = [];
+
+            if ( params && params.startt && params.records ) {
+                let _min = 0, _max = params.startt * 1;
+                let _offset = 0, _count = params.records * 1;
+                _result = await this.redis.client.zrevrangebyscore(key, _max, _min, 'LIMIT', _offset, _count);
+            }
+
             return _result;
         } catch(err) {
             this.log.error('get chats fail: ', err);

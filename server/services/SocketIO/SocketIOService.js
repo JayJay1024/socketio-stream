@@ -55,7 +55,6 @@ class SocketIOService {
         this.log.info('socket.io service start...');
 
         this.handleIO.on('connection', async (socket) => {
-            let chatListStart = 0;
             let lastRank = null;
             let handleLoop = null;  // EOS Daily Rank Loop
 
@@ -79,13 +78,16 @@ class SocketIOService {
             });
 
             // 推送聊天记录
-            socket.on('getChatList', async () => {
+            socket.on('getChatList', async (params) => {
+                if ( typeof params === 'string' ) {
+                    params = JSON.parse(params);
+                }
+
                 let _key = 'chat:trustbetchat';
-                let _listChat = await this.cacheSvc.getChats(_key, chatListStart);
+                let _listChat = await this.cacheSvc.getChats(_key, params);
 
                 if ( _listChat && socket.connected ) {
                     socket.emit( 'ChatList', _listChat );
-                    chatListStart += 20;  // 20条记录
                 }
             });
 
