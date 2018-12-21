@@ -7,7 +7,7 @@ Must install redis first.
 ```
 // after install nodejs
 $ npm install
-$ npm start
+$ pm2 start --env production
 // now go to client demo
 ```
 
