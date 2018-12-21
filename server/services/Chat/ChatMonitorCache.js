@@ -18,8 +18,8 @@ class ChatMonitorCache {
             if ( data && data.player && data.quantity && data.block_time ) {
                 let _player   = data.player;
                 let _quantity = data.quantity.split(' ');
-                let _nows     = Math.floor(Date.now()/1000);
                 let _today    = Math.floor(Date.now()/(1000 * 86400));
+                let _txtime   = Math.floor((new Date(data.block_time)).getTime()/1000);
 
                 let _keyDailyRank   = `r:${_today}`;                    // 日排行榜
                 let _keyGameChats   = `chat:${this.gameContract}`;      // 所有玩家的记录
@@ -40,13 +40,13 @@ class ChatMonitorCache {
 
                     this.redis.client.multi({ pipeline: false });
 
-                    this.redis.client.zadd(_keyGameChats, _nows, _data);
-                    this.redis.client.zadd(_keyPlayerChats, _nows, _data);
+                    this.redis.client.zadd(_keyGameChats, _txtime, _data);
+                    this.redis.client.zadd(_keyPlayerChats, _txtime, _data);
                     this.redis.client.zincrby(_keyDailyRank, parseFloat(_quantity[0]), _player);
 
                     this.redis.client.expire(_keyDailyRank, 60*60*72);                      // 日排行榜保留72小时
-                    this.redis.client.zremrangebyscore(_keyGameChats, 0, _nows-2*86400);    // 聊天记录保留48小时
-                    this.redis.client.zremrangebyscore(_keyPlayerChats, 0, _nows-2*86400);  // 聊天记录保留48小时
+                    this.redis.client.zremrangebyscore(_keyGameChats, 0, _txtime-2*86400);    // 聊天记录保留48小时
+                    this.redis.client.zremrangebyscore(_keyPlayerChats, 0, _txtime-2*86400);  // 聊天记录保留48小时
 
                     let _ret = await this.redis.client.exec();
                     if ( _ret ) {
@@ -70,8 +70,8 @@ class ChatMonitorCache {
         try {
             this.redis.pub.publish('NewChatResult', JSON.stringify(data));
 
-            if (data) {
-                let _nows = Math.floor(Date.now()/1000);
+            if (data && data.block_time) {
+                let _txtime   = Math.floor((new Date(data.block_time)).getTime()/1000);
 
                 let _keyChatResult = `results:${this.gameContract}`;
                 let _data          = JSON.stringify(data);
@@ -87,8 +87,8 @@ class ChatMonitorCache {
                     }
 
                     this.redis.client.multi({ pipeline: false });
-                    this.redis.client.zadd(_keyChatResult, _nows, _data);
-                    this.redis.client.zremrangebyscore(_keyChatResult, 0, _nows-7*86400);  // 中奖记录保留7天
+                    this.redis.client.zadd(_keyChatResult, _txtime, _data);
+                    this.redis.client.zremrangebyscore(_keyChatResult, 0, _txtime-7*86400);  // 中奖记录保留7天
 
                     let _ret = await this.redis.client.exec();
                     if ( _ret ) {
