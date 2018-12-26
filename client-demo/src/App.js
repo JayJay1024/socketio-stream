@@ -83,11 +83,71 @@ class App extends Component {
 
       // 订阅NewChatResult，接收新的开奖
       socketHandle.on('NewChatResult', (data) => {
+        // data数据结构
+        // {
+        //   "day": 17882,
+        //   "result": [{
+        //       "player": "aaaaaaaa3333",
+        //       "quantity": "12.3456 EOS",
+        //       "ticket": 123456
+        //     },{
+        //       "player": "aaaaaaaa3333",
+        //       "quantity": "12.3456 EOS",
+        //       "ticket": 123456
+        //     },{
+        //       "player": "aaaaaaaa3333",
+        //       "quantity": "12.3456 EOS",
+        //       "ticket": 123456
+        //     },{
+        //       "player": "aaaaaaaa3333",
+        //       "quantity": "12.3456 EOS",
+        //       "ticket": 123456
+        //     },{
+        //       "player": "aaaaaaaa3333",
+        //       "quantity": "12.3456 EOS",
+        //       "ticket": 123456
+        //     },{
+        //       "player": "aaaaaaaa3333",
+        //       "quantity": "12.3456 EOS",
+        //       "ticket": 123456
+        //     }
+        //   ]
+        // }
         console.log('new chat result: ', data);
       });
 
       // 订阅ChatResultList，接收中奖记录
       socketHandle.on('ChatResultList', (data) => {
+        // data数据结构
+        // ['{
+        //   "day":17882,
+        //   "result":[{
+        //       "player":"aaaaaaaa3333",
+        //       "quantity":"12.3456 EOS",
+        //       "ticket":123456
+        //   },{
+        //       "player":"aaaaaaaa3333",
+        //       "quantity":"12.3456 EOS",
+        //       "ticket":123456
+        //   },{
+        //       "player":"aaaaaaaa3333",
+        //       "quantity":"12.3456 EOS",
+        //       "ticket":123456
+        //   },{
+        //       "player":"aaaaaaaa3333",
+        //       "quantity":"12.3456 EOS",
+        //       "ticket":123456
+        //   },{
+        //       "player":"aaaaaaaa3333",
+        //       "quantity":"12.3456 EOS",
+        //       "ticket":123456
+        //   },{
+        //       "player":"aaaaaaaa3333",
+        //       "quantity":"12.3456 EOS",
+        //       "ticket":123456
+        //   }],
+        //   "block_time":"2018-12-26T06:05:10.000"
+        // }']
         console.log('chat result list: ', data);
       });
       // 请求中奖记录
