@@ -78,12 +78,12 @@ class SocketIOCache {
 
                 for ( let i = 0; i < _len; i++ ) {
                     if ( i % 2 ) {
-                        _results[_results.length - 1].day = _ret[i];
+                        // _results[_results.length - 1].day = _ret[i];
                     } else {
-                        _results.push( {result: _ret[i]} );
+                        _results.push(_ret[i]);
                     }
                 }
-
+                this.log.debug('chat result: ', _results);
                 return _results;
             }
 
