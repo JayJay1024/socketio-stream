@@ -83,7 +83,6 @@ class SocketIOCache {
                         _results.push(_ret[i]);
                     }
                 }
-                this.log.debug('chat result: ', _results);
                 return _results;
             }
 
