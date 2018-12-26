@@ -7,6 +7,11 @@ const socketSvr = 'http://localhost:8080';
 var socketHandle = null;
 
 class App extends Component {
+  constructor(props) {
+    super(props);
+
+    this.starttime = Math.floor(Date.now()/1000);  // 开始时间，单位：秒
+  }
 
   // 模拟打开游戏页面
   openGame = (e) => {
@@ -62,7 +67,18 @@ class App extends Component {
 
       // 订阅ChatList，接收聊天记录
       socketHandle.on('ChatList', (data) => {
-        console.log('chat list: ', data);
+        // console.log('chat list: ', data);
+        console.log(new Date(this.starttime*1000));
+
+        let test = JSON.parse(data[data.length-1]);
+        this.starttime = Math.floor((new Date(test.block_time)).getTime() / 1000);
+
+        for ( let tmp of data ) {
+          if ( typeof tmp === 'string' ) {
+            tmp = JSON.parse(tmp);
+          }
+          console.log(tmp.block_time);
+        }
       });
 
       // 订阅NewChatResult，接收新的开奖
@@ -108,7 +124,7 @@ class App extends Component {
     if ( socketHandle && socketHandle.connected ) {
         // startt 和 records 这两个参数名是固定的
         let getChatListParams = {
-          startt: Math.floor(Date.now()/1000),  // 开始时间，单位：秒
+          startt: this.starttime,
           records: 10,                          // 从 startt 时间往后的多少条记录
         }
         socketHandle.emit('getChatList', JSON.stringify(getChatListParams));
