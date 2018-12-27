@@ -24,7 +24,6 @@ class SocketIOCache {
             for ( let i = 0; i < _data.length; i++ ) {
                 if ( i % 2 ) {
                     _result[_result.length - 1].balance = _data[i];
-                    _result[_result.length - 1] = JSON.stringify(_result[_result.length - 1]);
                 } else {
                     _result.push( {name: _data[i]} );
                 }
@@ -32,6 +31,7 @@ class SocketIOCache {
         } catch(err) {
             this.log.error('get eos daily rank', err);
         }
+        _result = JSON.stringify(_result);
         return _result;
     }
 
@@ -43,6 +43,7 @@ class SocketIOCache {
         } catch(err) {
             this.log.error('get sicbo records', err);
         }
+        _result = JSON.stringify(_result);
         return _result;
     }
 
@@ -59,11 +60,11 @@ class SocketIOCache {
                 _result.data   = _data;
                 _result.after  = _after;
                 _result.before = _before;
-                _result = JSON.stringify(_result);
             }
         } catch(err) {
             this.log.error('get chats fail: ', err);
         }
+        _result = JSON.stringify(_result);
         return _result;
     }
 
@@ -80,11 +81,11 @@ class SocketIOCache {
                 _result.data   = _data;
                 _result.after  = _after;
                 _result.before = _before;
-                _result = JSON.stringify(_result);
             }
         } catch(err) {
             this.log.error('get results fail: ', err);
         }
+        _result = JSON.stringify(_result);
         return _result;
     }
 }

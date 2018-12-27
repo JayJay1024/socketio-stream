@@ -147,17 +147,17 @@ class SocketIOService {
             this.redis.sub.on('message', (channel, message) => {  // 接收频道消息
                 switch (channel) {
                     case 'NewBet': {
-                        this.handleIO.emit( 'NewBet', message );
+                        this.handleIO.emit( 'NewBet', JSON.stringify(message) );
                         break;
                     }
                     case 'NewChat': {
                         let _NewChats = [];
                         _NewChats.push(message);
-                        this.handleIO.emit( 'NewChats', _NewChats );
+                        this.handleIO.emit( 'NewChats', JSON.stringify(_NewChats) );
                         break;
                     }
                     case 'NewChatResult': {
-                        this.handleIO.emit( 'NewChatResult', message );
+                        this.handleIO.emit( 'NewChatResult', JSON.stringify(message) );
                         break;
                     }
                     default: {
