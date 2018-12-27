@@ -1,6 +1,10 @@
 'use strict';
 
-const ROOTDIR = __dirname;
+/**
+ * 该文件可以拿到任何你启动pm2的目录下，然后修改以下配置，然后 pm2 start --env production 启动即可
+ */
+
+const ROOTDIR = __dirname;  // socketio-stream/server 的绝对路径
 
 module.exports = {
   apps : [{
@@ -14,8 +18,8 @@ module.exports = {
     max_memory_restart: '1G',
     env: {
       NODE_ENV: 'development',
-      CONFIG_PATH: `${ROOTDIR}/services/SocketIO/config.js`,
-      LOG_PATH: `${ROOTDIR}/logs/socketio/log.log`,
+      CONFIG_PATH: `${ROOTDIR}/services/SocketIO/config.js`,  // 配置文件路径，可自定义，是必须项
+      LOG_PATH: `${ROOTDIR}/logs/socketio/log.log`,           // 日志保存路径，可自定义，是必须项
     },
     env_production: {
       NODE_ENV: 'production',

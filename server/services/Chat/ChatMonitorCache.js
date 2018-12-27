@@ -58,7 +58,7 @@ class ChatMonitorCache {
                 this.log.error('add chat but data format error, data: ', data);
             }
 
-            this.log.debug('chat data not save: ', data);
+            this.log.info('chat data not save: ', data);
             return false;
         } catch(err) {
             this.log.error('add chat fail: ', err);
@@ -100,6 +100,7 @@ class ChatMonitorCache {
                 this.log.error('add chat result but data format error, data: ', data);
             }
 
+            this.log.info('chat result data not save: ', data);
             return false;
         } catch(err) {
             this.log.error('add chat result fail: ', err);

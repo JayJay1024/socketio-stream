@@ -8,6 +8,7 @@ class SocketIOCache {
             // pub: redis.redisPub,
             client: redis.redisClient,
         };
+        this.redisRecsMax  = 999999999999999;
 
         this.mineContract  = config.mineContract;
         this.chatContract  = config.chatContract;
@@ -15,39 +16,34 @@ class SocketIOCache {
     }
 
     async getEosDailyRank() {
+        let _result = [];
         try {
-            const dailyRank = `r:${Math.floor(Date.now()/(1000 * 86400))}`;
-            const result = await this.redis.client.zrevrange(dailyRank, 0, 9, 'WITHSCORES');
-            const len = result.length;
+            let _key = `r:${Math.floor(Date.now()/(1000 * 86400))}`;
+            let _data = await this.redis.client.zrevrange(_key, 0, 9, 'WITHSCORES');
 
-            if ( len % 2 === 0 ) {
-                let rank = [];
-
-                for ( let i = 0; i < len; i++ ) {
-                    if ( i % 2 ) {
-                        rank[rank.length - 1].balance = result[i];
-                    } else {
-                        rank.push( {name: result[i]} );
-                    }
+            for ( let i = 0; i < _data.length; i++ ) {
+                if ( i % 2 ) {
+                    _result[_result.length - 1].balance = _data[i];
+                    _result[_result.length - 1] = JSON.stringify(_result[_result.length - 1]);
+                } else {
+                    _result.push( {name: _data[i]} );
                 }
-
-                return rank;
-            } else {
-                return [];
             }
         } catch(err) {
-            this.log.error('get EOS daily rank', err);
-        }     
+            this.log.error('get eos daily rank', err);
+        }
+        return _result;
     }
 
     async getSicRecords(accout) {
+        let _result = []
         try {
-            const aKey = `a:${accout}`;
-            const result = await this.redis.client.zrevrange(aKey, 0, 19);
-            return result;
+            let _key = `a:${accout}`;
+            _result = await this.redis.client.zrevrange(_key, 0, 19);
         } catch(err) {
-            this.log.error('geteosDailyRank', err);
+            this.log.error('get sicbo records', err);
         }
+        return _result;
     }
 
     async getChats(key, params=null) {
@@ -57,12 +53,12 @@ class SocketIOCache {
                 let _min = 0, _max = params.startt * 1;
                 let _offset = 0, _count = params.records * 1;
                 let _data  = await this.redis.client.zrevrangebyscore(key, _max, _min, 'LIMIT', _offset, _count);
-                let _after  = await this.redis.client.zrevrangebyscore(key, 999999999999999, _max+1);
-                let _before = await this.redis.client.zrevrangebyscore(key, _max-_data.length, _min);
+                let _after  = await this.redis.client.zcount(key, _max+1, this.redisRecsMax);
+                let _before = await this.redis.client.zcount(key, _min, _max-1);
 
                 _result.data   = _data;
-                _result.after  = _after.length;
-                _result.before = _before.length;
+                _result.after  = _after;
+                _result.before = _before;
                 _result = JSON.stringify(_result);
             }
         } catch(err) {
@@ -78,12 +74,12 @@ class SocketIOCache {
                 let _min = 0, _max = params.startt * 1;
                 let _offset = 0, _count = params.records * 1;
                 let _data   = await this.redis.client.zrevrangebyscore(key, _max, _min, 'LIMIT', _offset, _count);  // 获取最近7天的
-                let _after  = await this.redis.client.zrevrangebyscore(key, 999999999999999, _max+1);
-                let _before = await this.redis.client.zrevrangebyscore(key, _max-_data.length, _min);
+                let _after  = await this.redis.client.zcount(key, _max+1, this.redisRecsMax);
+                let _before = await this.redis.client.zcount(key, _min, _max-1);
 
                 _result.data   = _data;
-                _result.after  = _after.length;
-                _result.before = _before.length;
+                _result.after  = _after;
+                _result.before = _before;
                 _result = JSON.stringify(_result);
             }
         } catch(err) {

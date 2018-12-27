@@ -1,6 +1,6 @@
 'use strict';
 
-const configPath = process.env.CONFIG_PATH || './config.js';
+const configPath = process.env.CONFIG_PATH;
 
 const Ioc            = require('../../tools/Ioc')
 ,config              = require(configPath)

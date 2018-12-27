@@ -67,7 +67,7 @@ class SicBoMonitorCache {
                 }
             }
 
-            this.log.debug('bet data not save: ', data);
+            this.log.info('bet data not save: ', data);
             return false;
         } catch(err) {
             this.log.error('add bet', err);

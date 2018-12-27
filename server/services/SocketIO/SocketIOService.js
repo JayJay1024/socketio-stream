@@ -161,7 +161,7 @@ class SocketIOService {
                         break;
                     }
                     default: {
-                        this.log.debug(`invalid channel: ${channel} !`);
+                        this.log.info(`invalid channel: ${channel} !`);
                     }
                 }
             });
