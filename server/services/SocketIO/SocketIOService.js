@@ -92,9 +92,13 @@ class SocketIOService {
             });
 
             // 推送中奖记录
-            socket.on('getChatResultList', async () => {
+            socket.on('getChatResultList', async (params) => {
+                if ( typeof params === 'string' ) {
+                    params = JSON.parse(params);
+                }
+
                 let _key = 'results:trustbetchat';
-                let _listChatResult = await this.cacheSvc.getChatResults();
+                let _listChatResult = await this.cacheSvc.getChatResults(_key, params);
 
                 if ( _listChatResult && socket.connected ) {
                     socket.emit( 'ChatResultList', _listChatResult );

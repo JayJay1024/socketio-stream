@@ -51,46 +51,45 @@ class SocketIOCache {
     }
 
     async getChats(key, params=null) {
+        let _result = {};
         try {
-            let _result = [];
-
             if ( params && params.startt && params.records ) {
                 let _min = 0, _max = params.startt * 1;
                 let _offset = 0, _count = params.records * 1;
-                _result = await this.redis.client.zrevrangebyscore(key, _max, _min, 'LIMIT', _offset, _count);
-            }
+                let _data  = await this.redis.client.zrevrangebyscore(key, _max, _min, 'LIMIT', _offset, _count);
+                let _after  = await this.redis.client.zrevrangebyscore(key, 999999999999999, _max+1);
+                let _before = await this.redis.client.zrevrangebyscore(key, _max-_data.length, _min);
 
-            return _result;
+                _result.data   = _data;
+                _result.after  = _after.length;
+                _result.before = _before.length;
+                _result = JSON.stringify(_result);
+            }
         } catch(err) {
             this.log.error('get chats fail: ', err);
-            return [];
         }
+        return _result;
     }
 
-    async getChatResults() {
+    async getChatResults(key, params=null) {
+        let _result = {};
         try {
-            let _key = `results:${this.chatContract}`;
-            let _ret = await this.redis.client.zrevrange(_key, 0, 6, 'WITHSCORES');  // 获取最近7天的
-            let _len = _ret.length;
+            if ( params && params.startt && params.records ) {
+                let _min = 0, _max = params.startt * 1;
+                let _offset = 0, _count = params.records * 1;
+                let _data   = await this.redis.client.zrevrangebyscore(key, _max, _min, 'LIMIT', _offset, _count);  // 获取最近7天的
+                let _after  = await this.redis.client.zrevrangebyscore(key, 999999999999999, _max+1);
+                let _before = await this.redis.client.zrevrangebyscore(key, _max-_data.length, _min);
 
-            if ( _len % 2 === 0 ) {
-                let _results = [];
-
-                for ( let i = 0; i < _len; i++ ) {
-                    if ( i % 2 ) {
-                        // _results[_results.length - 1].day = _ret[i];
-                    } else {
-                        _results.push(_ret[i]);
-                    }
-                }
-                return _results;
+                _result.data   = _data;
+                _result.after  = _after.length;
+                _result.before = _before.length;
+                _result = JSON.stringify(_result);
             }
-
-            return [];
         } catch(err) {
             this.log.error('get results fail: ', err);
-            return [];
         }
+        return _result;
     }
 }
 
