@@ -52,15 +52,23 @@ class SocketIOCache {
         try {
             if ( params && params.startt && params.records ) {
                 let _min = 0, _max = params.startt * 1;
+                if ( _max < 0 ) { _max = this.redisRecsMax; }
                 let _offset = 0, _count = params.records * 1;
                 if ( _count > 100 ) { _count = 100; }
+                else if ( _count < 1 ) { _count = 1; }
                 let _data  = await this.redis.client.zrevrangebyscore(key, _max, _min, 'LIMIT', _offset, _count);
-                let _after  = await this.redis.client.zcount(key, _max+1, this.redisRecsMax);
-                let _before = await this.redis.client.zcount(key, _min, _max-1);
 
-                _result.data   = _data;
-                _result.after  = _after;
-                _result.before = _before;
+                if ( _data.length ) {
+                    // let _max_r = _data[0]; _max_r = JSON.parse(_max_r);
+                    // let _min_r = _data[_data.length-1]; _min_r = JSON.parse(_min_r);
+
+                    let _after  = await this.redis.client.zcount(key, _max+1, this.redisRecsMax);
+                    let _before = await this.redis.client.zcount(key, _min, _max-1);
+
+                    _result.data   = _data;
+                    _result.after  = _after;
+                    _result.before = _before;
+                }
             }
         } catch(err) {
             this.log.error('get chats fail: ', err);
@@ -77,13 +85,20 @@ class SocketIOCache {
                 if ( _max < 0 ) { _max = this.redisRecsMax; }
                 let _offset = 0, _count = params.records * 1;
                 if ( _count > 100 ) { _count = 100; }
+                else if ( _count < 1 ) { _count = 1; }
                 let _data   = await this.redis.client.zrevrangebyscore(key, _max, _min, 'LIMIT', _offset, _count);  // 获取最近7天的
-                let _after  = await this.redis.client.zcount(key, _max+1, this.redisRecsMax);
-                let _before = await this.redis.client.zcount(key, _min, _max-1);
 
-                _result.data   = _data;
-                _result.after  = _after;
-                _result.before = _before;
+                if ( _data.length ) {
+                    let _max_r = _data[0]; _max_r = JSON.parse(_max_r);
+                    let _min_r = _data[_data.length-1]; _min_r = JSON.parse(_min_r);
+
+                    let _after  = await this.redis.client.zcount(key, _max_r.number+1, this.redisRecsMax);
+                    let _before = await this.redis.client.zcount(key, _min, _min_r.number-1);
+
+                    _result.data   = _data;
+                    _result.after  = _after;
+                    _result.before = _before;
+                }
             }
         } catch(err) {
             this.log.error('get results fail: ', err);
