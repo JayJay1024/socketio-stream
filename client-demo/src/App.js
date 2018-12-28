@@ -202,8 +202,8 @@ class App extends Component {
     if ( socketHandle && socketHandle.connected ) {
         // startt 和 records 这两个参数名是固定的
         let getChatResultListParams = {
-          startt: Math.floor(Date.now()/1000/3600),  // 小时
-          records: 10,                               // 从 startt 时间往后的多少条记录
+          startt: -1,  // 期数，小于0将从最新的期数返回
+          records: 10, // 从 startt 时间往后的多少条记录
         }
         socketHandle.emit('getChatResultList', JSON.stringify(getChatResultListParams));
     } else {
