@@ -74,6 +74,7 @@ class SocketIOCache {
         try {
             if ( params && params.startt && params.records ) {
                 let _min = 0, _max = params.startt * 1;
+                if ( _max < 0 ) { _max = this.redisRecsMax; }
                 let _offset = 0, _count = params.records * 1;
                 if ( _count > 100 ) { _count = 100; }
                 let _data   = await this.redis.client.zrevrangebyscore(key, _max, _min, 'LIMIT', _offset, _count);  // 获取最近7天的
