@@ -53,6 +53,7 @@ class SocketIOCache {
             if ( params && params.startt && params.records ) {
                 let _min = 0, _max = params.startt * 1;
                 let _offset = 0, _count = params.records * 1;
+                if ( _count > 100 ) { _count = 100; }
                 let _data  = await this.redis.client.zrevrangebyscore(key, _max, _min, 'LIMIT', _offset, _count);
                 let _after  = await this.redis.client.zcount(key, _max+1, this.redisRecsMax);
                 let _before = await this.redis.client.zcount(key, _min, _max-1);
@@ -74,6 +75,7 @@ class SocketIOCache {
             if ( params && params.startt && params.records ) {
                 let _min = 0, _max = params.startt * 1;
                 let _offset = 0, _count = params.records * 1;
+                if ( _count > 100 ) { _count = 100; }
                 let _data   = await this.redis.client.zrevrangebyscore(key, _max, _min, 'LIMIT', _offset, _count);  // 获取最近7天的
                 let _after  = await this.redis.client.zcount(key, _max+1, this.redisRecsMax);
                 let _before = await this.redis.client.zcount(key, _min, _max-1);
