@@ -10,8 +10,7 @@ class App extends Component {
   constructor(props) {
     super(props);
 
-    this.openGame     = this.openGame.bind(this);
-    this.playerLogin  = this.playerLogin.bind(this);
+    this.starttime = Math.floor(Date.now()/1000);  // 开始时间，单位：秒
   }
 
   // 模拟打开游戏页面
@@ -56,7 +55,7 @@ class App extends Component {
 
       // 连接后订阅NewChat消息，接收 "废话链天" 弹幕
       socketHandle.on('NewChats', (data) => {
-        // data是包含如下字段的数组：
+        // data.data是包含如下字段的数组：
         // {
         //   player: 'aaaaaaaa2222',                       => 玩家
         //   quantity: '0.1000 EOS',                       => 金额
@@ -69,21 +68,92 @@ class App extends Component {
       // 订阅ChatList，接收聊天记录
       socketHandle.on('ChatList', (data) => {
         console.log('chat list: ', data);
+        console.log(new Date(this.starttime*1000));
+
+        if ( typeof data === 'string' ) {
+          data = JSON.parse(data);
+        }
+
+        let test = JSON.parse(data.data[data.data.length-1]);
+        this.starttime = Math.floor((new Date(test.block_time)).getTime() / 1000);
+
+        for ( let tmp of data.data ) {
+          if ( typeof tmp === 'string' ) {
+            tmp = JSON.parse(tmp);
+          }
+          console.log(tmp);
+        }
       });
-      // 请求聊天记录
-      socketHandle.emit('getChatList');
 
       // 订阅NewChatResult，接收新的开奖
       socketHandle.on('NewChatResult', (data) => {
+        // data数据结构
+        // {
+        //   "day": 17882,
+        //   "result": [{
+        //       "player": "aaaaaaaa3333",
+        //       "quantity": "12.3456 EOS",
+        //       "ticket": 123456
+        //     },{
+        //       "player": "aaaaaaaa3333",
+        //       "quantity": "12.3456 EOS",
+        //       "ticket": 123456
+        //     },{
+        //       "player": "aaaaaaaa3333",
+        //       "quantity": "12.3456 EOS",
+        //       "ticket": 123456
+        //     },{
+        //       "player": "aaaaaaaa3333",
+        //       "quantity": "12.3456 EOS",
+        //       "ticket": 123456
+        //     },{
+        //       "player": "aaaaaaaa3333",
+        //       "quantity": "12.3456 EOS",
+        //       "ticket": 123456
+        //     },{
+        //       "player": "aaaaaaaa3333",
+        //       "quantity": "12.3456 EOS",
+        //       "ticket": 123456
+        //     }
+        //   ]
+        // }
         console.log('new chat result: ', data);
       });
 
       // 订阅ChatResultList，接收中奖记录
       socketHandle.on('ChatResultList', (data) => {
+        // data.data数据结构
+        // ['{
+        //   "day":17882,
+        //   "result":[{
+        //       "player":"aaaaaaaa3333",
+        //       "quantity":"12.3456 EOS",
+        //       "ticket":123456
+        //   },{
+        //       "player":"aaaaaaaa3333",
+        //       "quantity":"12.3456 EOS",
+        //       "ticket":123456
+        //   },{
+        //       "player":"aaaaaaaa3333",
+        //       "quantity":"12.3456 EOS",
+        //       "ticket":123456
+        //   },{
+        //       "player":"aaaaaaaa3333",
+        //       "quantity":"12.3456 EOS",
+        //       "ticket":123456
+        //   },{
+        //       "player":"aaaaaaaa3333",
+        //       "quantity":"12.3456 EOS",
+        //       "ticket":123456
+        //   },{
+        //       "player":"aaaaaaaa3333",
+        //       "quantity":"12.3456 EOS",
+        //       "ticket":123456
+        //   }],
+        //   "block_time":"2018-12-26T06:05:10.000"
+        // }']
         console.log('chat result list: ', data);
       });
-      // 请求中奖记录
-      socketHandle.emit('getChatResultList');
     });
 
     socketHandle.on('error', (err) => {
@@ -109,6 +179,38 @@ class App extends Component {
     }
   }
 
+  // 请求聊天记录
+  getChatList = (e) => {
+    e.preventDefault();
+
+    if ( socketHandle && socketHandle.connected ) {
+        // startt 和 records 这两个参数名是固定的
+        let getChatListParams = {
+          startt: this.starttime,
+          records: 10,                          // 从 startt 时间往后的多少条记录
+        }
+        socketHandle.emit('getChatList', JSON.stringify(getChatListParams));
+    } else {
+      alert( 'open the game first~' );
+    }
+  }
+
+  // 请求中奖记录
+  getChatResultList = (e) => {
+    e.preventDefault();
+
+    if ( socketHandle && socketHandle.connected ) {
+        // startt 和 records 这两个参数名是固定的
+        let getChatResultListParams = {
+          startt: Math.floor(Date.now()/1000/3600),  // 小时
+          records: 10,                               // 从 startt 时间往后的多少条记录
+        }
+        socketHandle.emit('getChatResultList', JSON.stringify(getChatResultListParams));
+    } else {
+        alert( 'open the game first~' );
+    }
+  }
+
 
   render() {
     return (
@@ -118,6 +220,12 @@ class App extends Component {
         </button>
         <button onClick={this.playerLogin} className='my-btn'>
           Player Login
+        </button>
+        <button onClick={this.getChatList} className='my-btn'>
+          Get ChatList
+        </button>
+        <button onClick={this.getChatResultList} className='my-btn'>
+          Get ChatResultList
         </button>
       </div>
     );

@@ -1,19 +1,16 @@
 'use strict';
 
-const request = require('request')
-,dayjs = require('dayjs')
-,event = require('events');
-const GAMEACCOUNT = 'trustbetgame';
-const MINEACCOUNT = 'trustbetmine';
+const request = require('request');
 
+class SicBoMonitorService {
+    constructor(config, log, cacheSvc) {
+        this.log          = log;
+        this.cacheSvc     = cacheSvc;
 
-class MonitoringService extends event.EventEmitter {
-    constructor(conf, log, cacheSvc) {
-        super();        
-        this.log = log;
-        this.conf = conf;
-        this.svc = cacheSvc;
-        this.lastAseq = 0;
+        this.lastAseq     = 0;
+        this.getActionUri = config.getActionsUrl;
+        this.gameContract = config.sicboContract;
+        this.mineContract = config.mineContract;
     }
 
     start() {
@@ -23,7 +20,14 @@ class MonitoringService extends event.EventEmitter {
 
     actionsHandler(pos = -1, offset = -200) {
         try {
-            request({url: this.conf.getActionsUrl, method:'POST', json:true, body: {account_name: GAMEACCOUNT, pos: pos, offset: offset}, timeout: 5000}, (err,res,body) => {
+            request({
+                url: this.getActionUri,
+                method: 'POST',
+                json:true,
+                body: {account_name: this.gameContract, pos: pos, offset: offset},
+                timeout: 5000
+            }, (err,res,body) => {
+
                 if(!err && res.statusCode == 200){
                     if(body.actions && body.actions.length && body.actions.length > 0)
                     { 
@@ -38,29 +42,19 @@ class MonitoringService extends event.EventEmitter {
                                 if(trace
                                     && trace.action_trace
                                     && trace.action_trace.act
-                                    && (trace.action_trace.act.account === GAMEACCOUNT || trace.action_trace.act.account === MINEACCOUNT)
+                                    && (trace.action_trace.act.account === this.gameContract || trace.action_trace.act.account === this.mineContract)
                                     && trace.action_trace.act.name === 'result'
                                     && trace.action_trace.act.data
                                     && trace.action_trace.act.data.res
                                     && trace.action_trace.receipt
-                                    && trace.action_trace.receipt.receiver === GAMEACCOUNT) {                                    
+                                    && trace.action_trace.receipt.receiver === this.gameContract) {                                    
 
                                         let data = trace.action_trace.act.data.res;
 
-                                        if ( trace.action_trace.act.account === MINEACCOUNT ) {
-                                            this.svc.addMine(data);
+                                        if ( trace.action_trace.act.account === this.gameContract ) {
+                                            this.cacheSvc.addBet(data);
                                         } else {
-                                            this.svc.getMine(data.uid, (payMine) => {
-                                                if ( payMine ) {
-                                                    data.mine = payMine;
-                                                } else {
-                                                    data.mine = '0.0000 TBT';
-                                                }
-
-                                                this.svc.addBet(data);
-
-                                                this.emit('NewBet', data);
-                                            });
+                                            this.cacheSvc.addMine(data);
                                         }
                                 }                        
                             }
@@ -84,4 +78,4 @@ class MonitoringService extends event.EventEmitter {
     }
 }
 
-module.exports = MonitoringService;
+module.exports = SicBoMonitorService;

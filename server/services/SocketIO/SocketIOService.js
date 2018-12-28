@@ -2,25 +2,25 @@ const Koa = require('koa');
 const app = new Koa();
 const router = require('koa-router')();
 const server = require('http').Server(app.callback());
-const fetch = require('node-fetch');
+// const fetch = require('node-fetch');
 
 router.get('/', async (ctx, next) => {
     ctx.response.body = `<h1>stream server version v1 ^_^</h1>`;
 });
 app.use(router.routes());
 
-class SocketIO {
-    constructor( conf, log, cacheSvc, cacheChatSvc, comSvc, monitorSvc, monChatSvc ) {
-        this.log = log;
-        this.svc = cacheSvc;
-        this.cacheChatSvc = cacheChatSvc;
-        this.comSvc = comSvc;
-        this.monitorSvc = monitorSvc;
-        this.monChatSvc = monChatSvc;
+class SocketIOService {
+    constructor(config, log, redis, cacheSvc) {
+        this.log          = log;
+        this.cacheSvc     = cacheSvc;
+        this.handleIO     = require('socket.io')(server);
+        this.redis        = {
+            sub: redis.redisSub,
+            // pub: redis.redisPub,
+            // client: redis.redisClient,
+        };
 
-        this.handleIO = require('socket.io')(server);
-
-        server.listen(conf.socketioPort);
+        server.listen(config.socketioPort);
     }
 
     // async minertop( socket ) {
@@ -52,8 +52,9 @@ class SocketIO {
     // }
 
     async start() {
+        this.log.info('socket.io service start...');
+
         this.handleIO.on('connection', async (socket) => {
-            let chatListStart = 0;
             let lastRank = null;
             let handleLoop = null;  // EOS Daily Rank Loop
 
@@ -70,27 +71,34 @@ class SocketIO {
 
             socket.on('Login', async (player) => {
                 this.log.info( `login: ${player}` );
-                let playerBetList = await this.svc.getAcitons( player );
+                let playerBetList = await this.cacheSvc.getSicRecords( player );
                 if ( playerBetList && socket.connected ) {
                     socket.emit( 'PlayerBetList', playerBetList );
                 }
             });
 
             // 推送聊天记录
-            socket.on('getChatList', async () => {
+            socket.on('getChatList', async (params) => {
+                if ( typeof params === 'string' ) {
+                    params = JSON.parse(params);
+                }
+
                 let _key = 'chat:trustbetchat';
-                let _listChat = await this.cacheChatSvc.getChats(_key, chatListStart);
+                let _listChat = await this.cacheSvc.getChats(_key, params);
 
                 if ( _listChat && socket.connected ) {
                     socket.emit( 'ChatList', _listChat );
-                    chatListStart += 20;  // 20条记录
                 }
             });
 
             // 推送中奖记录
-            socket.on('getChatResultList', async () => {
+            socket.on('getChatResultList', async (params) => {
+                if ( typeof params === 'string' ) {
+                    params = JSON.parse(params);
+                }
+
                 let _key = 'results:trustbetchat';
-                let _listChatResult = await this.cacheChatSvc.getResults();
+                let _listChatResult = await this.cacheSvc.getChatResults(_key, params);
 
                 if ( _listChatResult && socket.connected ) {
                     socket.emit( 'ChatResultList', _listChatResult );
@@ -101,7 +109,7 @@ class SocketIO {
 
             setImmediate(async () => {         
                 //发送排行榜
-                let latestRank = await this.comSvc.getEosDailyRank();
+                let latestRank = await this.cacheSvc.getEosDailyRank();
                 if ( latestRank &&
                      socket.connected &&
                      JSON.stringify(lastRank) !== JSON.stringify(latestRank) )  {
@@ -111,14 +119,14 @@ class SocketIO {
                 }
 
                 //发送所有投注
-                let trustBetList = await this.svc.getAcitons( 'trustbetgame' );    
+                let trustBetList = await this.cacheSvc.getSicRecords( 'trustbetgame' );
                 if ( socket.connected ) {
                     if ( trustBetList )  { socket.emit( 'TrustBetList', trustBetList ); }
                 }       
             });
 
             handleLoop = setInterval(async () => {
-                let latestRank = await this.comSvc.getEosDailyRank();
+                let latestRank = await this.cacheSvc.getEosDailyRank();
                 if ( latestRank &&
                      socket.connected &&
                      JSON.stringify(lastRank) !== JSON.stringify(latestRank) )  {
@@ -129,18 +137,36 @@ class SocketIO {
             }, 3000);  // 3s
         });
 
-        this.monitorSvc.on('NewBet', (actData) => {
-            this.handleIO.emit( 'NewBet', actData );
-        });
-        this.monChatSvc.on('NewChat', (actData) => {
-            let _NewChats = [];
-            _NewChats.push(actData);
-            this.handleIO.emit( 'NewChats', _NewChats );
-        });
-        this.monChatSvc.on('NewChatResult', (actData) => {
-            this.handleIO.emit( 'NewChatResult', actData );
+        this.redis.sub.subscribe('NewBet', 'NewChat', 'NewChatResult', (err, count) => {  // 需要订阅的频道在这里添加
+            if (err) {
+                this.log.error('redis subscribe: ', err);
+                return false;
+            }
+            this.log.info(`redis subscribed ${count} channels...`);
+
+            this.redis.sub.on('message', (channel, message) => {  // 接收频道消息
+                switch (channel) {
+                    case 'NewBet': {
+                        this.handleIO.emit( 'NewBet', JSON.stringify(message) );
+                        break;
+                    }
+                    case 'NewChat': {
+                        let _NewChats = [];
+                        _NewChats.push(message);
+                        this.handleIO.emit( 'NewChats', JSON.stringify(_NewChats) );
+                        break;
+                    }
+                    case 'NewChatResult': {
+                        this.handleIO.emit( 'NewChatResult', JSON.stringify(message) );
+                        break;
+                    }
+                    default: {
+                        this.log.info(`invalid channel: ${channel} !`);
+                    }
+                }
+            });
         });
     }
 }
 
-module.exports = SocketIO;
+module.exports = SocketIOService;

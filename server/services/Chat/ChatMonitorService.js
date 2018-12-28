@@ -1,22 +1,19 @@
 'use strict';
 
-const request = require('request')
-,event = require('events');
+const request = require('request');
 
-class MonitorChatService extends event.EventEmitter {
-    constructor( conf, log, cacheSvc ) {
-        super();
-
+class ChatMonitorService {
+    constructor( config, log, cacheSvc ) {
         this.log          = log;
-        this.conf         = conf;
         this.cacheSvc     = cacheSvc;
 
         this.lastAseq     = 0;
-        this.gameContract = 'trustbetchat';
+        this.getActionUri = config.getActionsUrl;
+        this.gameContract = config.chatContract;
     }
 
     start() {
-        this.log.info('monitor chat service start...');
+        this.log.info('monitor service start...');
         this.actionsHandler();  // 使用默认参数值
     }
 
@@ -24,7 +21,7 @@ class MonitorChatService extends event.EventEmitter {
     actionsHandler( pos = -1, offset = -200 ) {
         try {
             request({
-                url: this.conf.getActionsUrl,
+                url: this.getActionUri,
                 method: 'POST',
                 json: true,
                 body: { account_name: this.gameContract, pos: pos, offset: offset },
@@ -50,15 +47,12 @@ class MonitorChatService extends event.EventEmitter {
                                     && trace.action_trace.receipt.receiver === this.gameContract ) {
 
                                     let data        = trace.action_trace.act.data.res;
-                                    data.trx_id     = trace.action_trace.trx_id;
                                     data.block_time = trace.action_trace.block_time;
 
                                     if ( trace.action_trace.act.name === 'resultp' ) {  // 弹幕
                                         this.cacheSvc.addChat( data );
-                                        this.emit( 'NewChat', data );
                                     } else if ( trace.action_trace.act.name === 'resultr' ) {  // 中奖结果
                                         this.cacheSvc.addResult( data );
-                                        this.emit( 'NewChatResult', data );
                                     }
                                 }
                             }
@@ -85,4 +79,4 @@ class MonitorChatService extends event.EventEmitter {
     }
 }
 
-module.exports = MonitorChatService;
+module.exports = ChatMonitorService;
