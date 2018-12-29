@@ -70,7 +70,7 @@ class ChatMonitorCache {
         try {
             this.redis.pub.publish('NewChatResult', JSON.stringify(data));
 
-            if (data && data.block_time && data.number) {
+            if (data && data.block_time && (data.number || data.number >= 0)) {
                 let _number = data.number * 1;
 
                 let _keyChatResult = `results:${this.gameContract}`;
