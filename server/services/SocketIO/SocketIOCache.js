@@ -90,7 +90,7 @@ class SocketIOCache {
         };
 
         try {
-            if ( params && params.startt && params.records ) {
+            if ( params && (typeof(params.startt) != undefined) && params.records ) {
                 let _min = 0, _max = params.startt * 1;
                 if ( _max < 0 ) { _max = this.redisRecsMax; }
                 let _offset = 0, _count = params.records * 1;
