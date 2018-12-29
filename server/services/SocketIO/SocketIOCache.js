@@ -48,7 +48,12 @@ class SocketIOCache {
     }
 
     async getChats(key, params=null) {
-        let _result = {};
+        let _result = {
+            data: [],
+            after: 0,
+            before: 0,
+        };
+
         try {
             if ( params && params.startt && params.records ) {
                 let _min = 0, _max = params.startt * 1;
@@ -78,7 +83,12 @@ class SocketIOCache {
     }
 
     async getChatResults(key, params=null) {
-        let _result = {};
+        let _result = {
+            data: [],
+            after: 0,
+            before: 0,
+        };
+
         try {
             if ( params && params.startt && params.records ) {
                 let _min = 0, _max = params.startt * 1;
