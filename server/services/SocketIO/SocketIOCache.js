@@ -85,8 +85,8 @@ class SocketIOCache {
     async getChatResults(key, params=null) {
         let _result = {
             data: [],
-            after: 0,
-            before: 0,
+            after: -1,
+            before: -1,
         };
 
         try {
@@ -99,15 +99,20 @@ class SocketIOCache {
                 let _data   = await this.redis.client.zrevrangebyscore(key, _max, _min, 'LIMIT', _offset, _count);  // 获取最近7天的
 
                 if ( _data.length ) {
+                    _result.data   = _data;
+
                     let _max_r = _data[0]; _max_r = JSON.parse(_max_r);
                     let _min_r = _data[_data.length-1]; _min_r = JSON.parse(_min_r);
 
-                    let _after  = await this.redis.client.zcount(key, _max_r.number+1, this.redisRecsMax);
-                    let _before = await this.redis.client.zcount(key, _min, _min_r.number-1);
+                    let _after  = await this.redis.client.zrangebyscore(key, _max_r.number+1, this.redisRecsMax, 'LIMIT', _offset, 1);
+                    let _before = await this.redis.client.zrevrangebyscore(key, _min_r.number-1, _min, 'LIMIT', _offset, 1);
 
-                    _result.data   = _data;
-                    _result.after  = _after;
-                    _result.before = _before;
+                    if (_after.length) {
+                        _result.after = JSON.parse(_after[0]).number;
+                    }
+                    if (_before.length) {
+                        _result.before = JSON.parse(_before[0]).number;
+                    }
                 }
             }
         } catch(err) {
