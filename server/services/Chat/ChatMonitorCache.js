@@ -13,6 +13,12 @@ class ChatMonitorCache {
 
     async addChat(data) {
         try {
+            let payMine = await this.getMine(data.uid);
+            if ( payMine ) {
+                data.mine = payMine;
+            } else {
+                data.mine = '0.0000 TBT';
+            }
             this.redis.pub.publish('NewChat', JSON.stringify(data));
 
             if ( data && data.player && data.quantity && data.block_time ) {
@@ -62,6 +68,26 @@ class ChatMonitorCache {
             return false;
         } catch(err) {
             this.log.error('add chat fail: ', err);
+            return false;
+        }
+    }
+
+    async addMine(data) {
+        try {
+            let uid    = data.uid;
+            let payout = data.payout;
+            await this.redis.client.set(uid, payout, 'EX', 60);  // expire: 60s
+        } catch(err) {
+            this.log.error('error when add chat mine:', err);
+            return false;
+        }
+    }
+
+    async getMine(uid) {
+        try {
+            return await this.redis.client.get(uid);
+        } catch(err) {
+            this.log.error('error when get chat mine:', err);
             return false;
         }
     }

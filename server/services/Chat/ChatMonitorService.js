@@ -10,6 +10,7 @@ class ChatMonitorService {
         this.lastAseq     = 0;
         this.getActionUri = config.getActionsUrl;
         this.gameContract = config.chatContract;
+        this.mineContract = config.mineContract;
     }
 
     start() {
@@ -41,8 +42,7 @@ class ChatMonitorService {
                                     && trace.action_trace.act.data
                                     && trace.action_trace.act.data.res
                                     && trace.action_trace.act.account
-                                    && trace.action_trace.act.account === this.gameContract
-                                    && (trace.action_trace.act.name === 'resultp' || trace.action_trace.act.name === 'resultr')
+                                    && ((trace.action_trace.act.account === this.gameContract && (trace.action_trace.act.name === 'resultp' || trace.action_trace.act.name === 'resultr')) || (trace.action_trace.act.account === this.mineContract && trace.action_trace.act.name === 'result'))
                                     && trace.action_trace.receipt
                                     && trace.action_trace.receipt.receiver === this.gameContract ) {
 
@@ -53,6 +53,8 @@ class ChatMonitorService {
                                         this.cacheSvc.addChat( data );
                                     } else if ( trace.action_trace.act.name === 'resultr' ) {  // 中奖结果
                                         this.cacheSvc.addResult( data );
+                                    } else if (trace.action_trace.act.name === 'result') {  // 挖矿结果
+                                        this.cacheSvc.addMine( data );
                                     }
                                 }
                             }
