@@ -158,7 +158,7 @@ class SocketIOService {
             }, 3000);  // 3s
         });
 
-        this.redis.sub.subscribe('NewBet', 'NewChat', 'NewTopnRes', 'NewChatResult', 'NewestTopnRes', (err, count) => {  // 需要订阅的频道在这里添加
+        this.redis.sub.subscribe('NewBet', 'NewCashBet', 'NewChat', 'NewTopnRes', 'NewChatResult', 'NewestTopnRes', (err, count) => {  // 需要订阅的频道在这里添加
             if (err) {
                 this.log.error('redis subscribe: ', err);
                 return false;
@@ -169,6 +169,10 @@ class SocketIOService {
                 switch (channel) {
                     case 'NewBet': {
                         this.handleIO.emit( 'NewBet', JSON.stringify(message) );
+                        break;
+                    }
+                    case 'NewCashBet': {
+                        this.handleIO.emit( 'NewCashBet', JSON.stringify(message) );
                         break;
                     }
                     case 'NewChat': {

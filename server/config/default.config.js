@@ -21,5 +21,6 @@ module.exports = {
     infoContract: 'trustbetinfo',
     mineContract: 'trustbetmine',
     chatContract: 'trustbetchat',
+    cashContract: 'trustbetcash',
     sicboContract: 'trustbetgame',
 };

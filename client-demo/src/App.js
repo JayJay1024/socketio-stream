@@ -53,6 +53,21 @@ class App extends Component {
         console.log( 'new bet: ', data );
       });
 
+      socketHandle.on('NewCashBet', (data) => {
+        // data字段如下：
+        // "id": 0,
+        // "uid": "ce24df65-b74e-4153-8d15-80467deb314e",
+        // "txtime": 1546500824,
+        // "player": "aaaaaaaa2222",
+        // "bet": "u:ce24df65-b74e-4153-8d15-80467deb314e;5:20000",
+        // "result": 12,
+        // "payin": "2.0000 EOS",
+        // "payout": "0.0000 EOS",
+        // "payed": 0,
+        // "mine": "16.0000 EOS"
+        console.log('NewCashBet:', data);
+      });
+
       // 连接后订阅NewChat消息，接收 "废话链天" 弹幕
       socketHandle.on('NewChats', (data) => {
         // data.data是包含如下字段的数组：
