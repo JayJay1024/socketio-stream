@@ -114,7 +114,7 @@ class ChatMonitorCache {
 
                     this.redis.client.multi({ pipeline: false });
                     this.redis.client.zadd(_keyChatResult, _number, _data);
-                    this.redis.client.zremrangebyscore(_keyChatResult, 0, _number-7*24);  // 中奖记录保留7天
+                    this.redis.client.zremrangebyscore(_keyChatResult, 0, _number-7*24*6);  // 中奖记录保留7天，每10分钟开奖一次
 
                     let _ret = await this.redis.client.exec();
                     if ( _ret ) {
