@@ -64,5 +64,24 @@ module.exports = {
       CONFIG_PATH: `${ROOTDIR}/services/SicBo/config.js`,
       LOG_PATH: `${ROOTDIR}/logs/sicbo/log.log`,
     }
+  }, {
+    name: 'TrustBetInfo',
+    script: `${ROOTDIR}/services/TrustBetInfo/startup.js`,
+
+    // Options reference: https://pm2.io/doc/en/runtime/reference/ecosystem-file/
+    instances: 1,
+    autorestart: true,
+    watch: false,
+    max_memory_restart: '1G',
+    env: {
+      NODE_ENV: 'development',
+      CONFIG_PATH: `${ROOTDIR}/services/TrustBetInfo/config.js`,
+      LOG_PATH: `${ROOTDIR}/logs/trustbetinfo/log.log`,
+    },
+    env_production: {
+      NODE_ENV: 'production',
+      CONFIG_PATH: `${ROOTDIR}/services/TrustBetInfo/config.js`,
+      LOG_PATH: `${ROOTDIR}/logs/trustbetinfo/log.log`,
+    }
   }],
 };

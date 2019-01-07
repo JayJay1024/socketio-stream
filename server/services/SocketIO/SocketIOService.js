@@ -105,6 +105,19 @@ class SocketIOService {
                 }
             });
 
+            // 推送EOS排行榜奖励发放记录
+            socket.on('getTopnResList', async (params) => {
+                if ( typeof params === 'string' ) {
+                    params = JSON.parse(params);
+                }
+                let _key = 'tr:trustbetinfo';
+                let _listTopnRes = await this.cacheSvc.getTopnRes(_key, params);
+
+                if ( _listTopnRes && socket.connected ) {
+                    socket.emit( 'TopnResList', _listTopnRes );
+                }
+            });
+
             // this.minertop( socket );
 
             setImmediate(async () => {         
@@ -137,7 +150,7 @@ class SocketIOService {
             }, 3000);  // 3s
         });
 
-        this.redis.sub.subscribe('NewBet', 'NewChat', 'NewChatResult', (err, count) => {  // 需要订阅的频道在这里添加
+        this.redis.sub.subscribe('NewBet', 'NewChat', 'NewTopnRes', 'NewChatResult', (err, count) => {  // 需要订阅的频道在这里添加
             if (err) {
                 this.log.error('redis subscribe: ', err);
                 return false;
@@ -154,6 +167,10 @@ class SocketIOService {
                         let _NewChats = [];
                         _NewChats.push(message);
                         this.handleIO.emit( 'NewChats', JSON.stringify(_NewChats) );
+                        break;
+                    }
+                    case 'NewTopnRes': {
+                        this.handleIO.emit( 'NewTopnRes', JSON.stringify(message) );
                         break;
                     }
                     case 'NewChatResult': {

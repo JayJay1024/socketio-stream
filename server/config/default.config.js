@@ -17,6 +17,7 @@ module.exports = {
     // getTransactionUrl: apiUri + '/v1/history/get_transaction',
 
     // contract account
+    infoContract: 'trustbetinfo',
     mineContract: 'trustbetmine',
     chatContract: 'trustbetchat',
     sicboContract: 'trustbetgame',
