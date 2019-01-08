@@ -103,7 +103,11 @@ class TrustBetInfoService {
                         this.getTBeosplayers( scope, _lower );
                     } else {
                         this.TBeosplayers.eosplayers.sort((a,b) => {
-                            return b.payin.split(' ')[0] * 1 - a.payin.split(' ')[0] * 1;
+                            if ( b.payin.split(' ')[0] * 1 - a.payin.split(' ')[0] * 1 === 0 ) {
+                                return a.id * 1 - b.id * 1;
+                            } else {
+                                return b.payin.split(' ')[0] * 1 - a.payin.split(' ')[0] * 1;
+                            }
                         });
                         this.TBeosplayers.status = 2;
                     }
