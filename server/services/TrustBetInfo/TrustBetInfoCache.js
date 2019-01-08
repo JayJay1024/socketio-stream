@@ -47,6 +47,17 @@ class TrustBetInfoCache {
             return false;
         }
     }
+
+    async addNewestTopnRes(data) {
+        try {
+            let _key  = 'tr:newesttopnres';
+            let _data = JSON.stringify(data);
+            await this.redis.client.set(_key, _data);
+        } catch(err) {
+            this.log.error('catch error when add newest topn result:', err);
+            return false;
+        }
+    }
 }
 
 module.exports = TrustBetInfoCache;

@@ -162,6 +162,15 @@ class SocketIOCache {
         _result = JSON.stringify(_result);
         return _result;
     }
+
+    async getNewestTopnRes() {
+        try {
+            return await this.redis.client.get('tr:newesttopnres');
+        } catch(err) {
+            this.log.error('error when get newest topn res:', err);
+            return false;
+        }
+    }
 }
 
 module.exports = SocketIOCache;

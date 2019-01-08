@@ -292,6 +292,28 @@ class App extends Component {
     }
   }
 
+  onNewestTopnRes = (e) => {
+    e.preventDefault();
+
+    if ( socketHandle && socketHandle.connected ) {
+      socketHandle.on('NewestTopnRes', (data) => {
+        if ( typeof data === 'string' ) {
+          data = JSON.parse(data);
+        }
+        console.log(data);
+      });
+      console.log('onNewestTopnRes...');
+    }
+  }
+
+  getNewestTopnRes = (e) => {
+    e.preventDefault();
+
+    if ( socketHandle && socketHandle.connected ) {
+      socketHandle.emit('getNewestTopnRes','kk');
+    }
+  }
+
   render() {
     return (
       <div className="my-box">
@@ -316,6 +338,12 @@ class App extends Component {
         </button>
         <button className='my-btn' onClick={this.getTopnResList}>
           获取EOS排行榜活动奖励发放记录
+        </button>
+        <button className='my-btn' onClick={this.onNewestTopnRes}>
+          订阅EOS排行榜实时信息通知
+        </button>
+        <button className='my-btn' onClick={this.getNewestTopnRes}>
+          获取EOS排行榜实时信息
         </button>
       </div>
     );

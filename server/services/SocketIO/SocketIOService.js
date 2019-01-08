@@ -118,6 +118,15 @@ class SocketIOService {
                 }
             });
 
+            // 推送实时排行榜
+            socket.on('getNewestTopnRes', async (p) => {
+                let _newestTopnRes = await this.cacheSvc.getNewestTopnRes();
+
+                if ( _newestTopnRes && socket.connected ) {
+                    socket.emit( 'NewestTopnRes', _newestTopnRes );
+                }
+            });
+
             // this.minertop( socket );
 
             setImmediate(async () => {         
