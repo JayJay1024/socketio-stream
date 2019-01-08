@@ -19,6 +19,7 @@ class SocketIOService {
             // pub: redis.redisPub,
             // client: redis.redisClient,
         };
+        this.newestTopn   = null;
 
         server.listen(config.socketioPort);
     }
@@ -57,7 +58,6 @@ class SocketIOService {
         this.handleIO.on('connection', async (socket) => {
             let lastRank = null;
             let handleLoop = null;  // EOS Daily Rank Loop
-            let lastNewestTopnRes = null, handleLoopNewestTopnRes = null;  // 推送EOS排行榜活动实时排行
 
             // let origin = socket.handshake.headers.origin;
             // this.log.info( `connection: ${origin}` );
@@ -122,25 +122,11 @@ class SocketIOService {
                 }
             });
 
-            // 推送实时排行榜
+            // 推送实时排行
             socket.on('getNewestTopnRes', async (p) => {
-                let _newestTopnRes = await this.cacheSvc.getNewestTopnRes();
-
-                if ( _newestTopnRes && socket.connected ) {
-                    lastNewestTopnRes = _newestTopnRes;
-                    socket.emit( 'NewestTopnRes', _newestTopnRes );
+                if ( this.newestTopn && socket.connected ) {
+                    socket.emit( 'NewestTopnRes', this.newestTopn );
                 }
-
-                handleLoopNewestTopnRes = setInterval(async () => {
-                    let latestNewestTopnRes = await this.cacheSvc.getNewestTopnRes();
-                    if ( latestNewestTopnRes &&
-                         socket.connected &&
-                         JSON.stringify(latestNewestTopnRes) !== JSON.stringify(lastNewestTopnRes) ) {
-
-                        lastNewestTopnRes = latestNewestTopnRes;
-                        socket.emit( 'NewestTopnRes', latestNewestTopnRes );
-                    }
-                }, 3000);
             });
 
             // this.minertop( socket );
@@ -175,7 +161,7 @@ class SocketIOService {
             }, 3000);  // 3s
         });
 
-        this.redis.sub.subscribe('NewBet', 'NewChat', 'NewTopnRes', 'NewChatResult', (err, count) => {  // 需要订阅的频道在这里添加
+        this.redis.sub.subscribe('NewBet', 'NewChat', 'NewTopnRes', 'NewChatResult', 'NewestTopnRes', (err, count) => {  // 需要订阅的频道在这里添加
             if (err) {
                 this.log.error('redis subscribe: ', err);
                 return false;
@@ -200,6 +186,13 @@ class SocketIOService {
                     }
                     case 'NewChatResult': {
                         this.handleIO.emit( 'NewChatResult', JSON.stringify(message) );
+                        break;
+                    }
+                    case 'NewestTopnRes': {
+                        if ( JSON.stringify(message) != JSON.stringify(this.newestTopn) ) {
+                            this.newestTopn = message;
+                            this.handleIO.emit( 'NewestTopnRes', JSON.stringify(message) );
+                        }
                         break;
                     }
                     default: {

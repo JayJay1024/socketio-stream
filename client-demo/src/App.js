@@ -300,6 +300,9 @@ class App extends Component {
         if ( typeof data === 'string' ) {
           data = JSON.parse(data);
         }
+        if ( typeof data === 'string' ) {
+          data = JSON.parse(data);
+        }
         console.log(data);
       });
       console.log('onNewestTopnRes...');
