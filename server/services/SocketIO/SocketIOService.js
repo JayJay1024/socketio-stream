@@ -66,9 +66,6 @@ class SocketIOService {
                 if ( handleLoop ) {
                     clearInterval( handleLoop );
                 }
-                if ( handleLoopNewestTopnRes ) {
-                    clearInterval( handleLoopNewestTopnRes );
-                }
 
                 // this.log.info( `disconnect: ${origin}` );
             });
