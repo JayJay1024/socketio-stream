@@ -228,6 +228,9 @@ class TrustBetInfoService {
                 this.TBconfig.status = 0;
                 this.TBeosplat.status = 0;
                 this.TBeosplayers.status = 0;
+                this.TBconfig.config = {};
+                this.TBeosplat.eosplat = {};
+                this.TBeosplayers.eosplayers = [];
                 this.cacheSvc.addNewestTopnRes(newestTopnRes);
             }
 
