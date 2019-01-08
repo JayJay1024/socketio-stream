@@ -101,7 +101,7 @@ class TrustBetInfoService {
                     if ( _more ) {
                         let _lower = _rows[_rows.length-1].player;
                         this.getTBeosplayers( scope, _lower );
-                    } else {
+                    } else if ( this.TBeosplayers.eosplayers.length ) {
                         this.TBeosplayers.eosplayers.sort((a,b) => {
                             if ( b.payin.split(' ')[0] * 1 - a.payin.split(' ')[0] * 1 === 0 ) {
                                 return b.id * 1 - a.id * 1;  // 合约id是倒序的，即越早下注的id号越大
@@ -192,12 +192,15 @@ class TrustBetInfoService {
     newestTopnResHandle() {
         try {
             if ( this.TBconfig.status === 0 ) {
+                this.TBconfig.status = 1;
                 this.getTBconfig();
             }
             if ( this.TBeosplat.status === 0 ) {
+                this.TBeosplat.status = 1;
                 this.getTBeosplat();
             }
             if ( this.TBeosplayers.status === 0 && this.TBeosplat.status === 2 ) {
+                this.TBeosplayers.status = 1;
                 let period = this.TBeosplat.eosplat.period * 1;
                 this.getTBeosplayers(period);
             }
