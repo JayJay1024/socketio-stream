@@ -206,24 +206,42 @@ class TrustBetInfoService {
             }
 
             if ( this.TBconfig.status === 2 && this.TBeosplat.status === 2 && this.TBeosplayers.status === 2 ) {
-                let topn_payin = 0;
-                let topn = this.TBconfig.config.topn * 1;
-                if ( topn > this.TBeosplayers.eosplayers.length ) {
-                    topn = this.TBeosplayers.eosplayers.length;
+                // 在不在活动时间
+                let should_pay = false;
+                let now_seconds = Math.floor(Date.now()/1000);
+                let dayth = Math.floor(now_seconds / 86400), timeth = Math.floor(now_seconds % 86400);
+                for ( let tconf of this.TBconfig.config.timeconf ) {
+                    let check_start = Math.floor(tconf.start % 86400);
+                    let check_end   = Math.floor(tconf.end   % 86400);
+
+                    if ( (check_start <= timeth && timeth <= check_end) && (tconf.day == 0 || tconf.day == dayth) ) {
+                        should_pay = true;
+                        break;
+                    }
                 }
+
+                // 总奖励
                 let eos_bounty = this.TBeosplat.eosplat.eos_sum.split(' ')[0] * 1 * this.TBconfig.config.rate / 10000;
                 if ( eos_bounty < this.TBconfig.config.lowconf.quantity.split(' ')[0] * 1 && this.TBconfig.config.lowconf.on ) {
                     eos_bounty = this.TBconfig.config.lowconf.quantity.split(' ')[0] * 1;
                 }
 
-                for ( let i = 0; i < topn; i++ ) {
-                    topn_payin += (this.TBeosplayers.eosplayers[i].payin.split(' ')[0] * 1);
-                }
+                if ( should_pay ) {
+                    let topn_payin = 0;
+                    let topn = this.TBconfig.config.topn * 1;
+                    if ( topn > this.TBeosplayers.eosplayers.length ) {
+                        topn = this.TBeosplayers.eosplayers.length;
+                    }
 
-                for ( let i = 0; i < topn; i++ ) {
-                    let payout_amount = eos_bounty * (this.TBeosplayers.eosplayers[i].payin.split(' ')[0] * 1) / topn_payin;
-                    payout_amount = Math.floor(payout_amount * 10000) / 10000;
-                    this.TBeosplayers.eosplayers[i].payout = payout_amount + ' EOS';
+                    for ( let i = 0; i < topn; i++ ) {
+                        topn_payin += (this.TBeosplayers.eosplayers[i].payin.split(' ')[0] * 1);
+                    }
+
+                    for ( let i = 0; i < topn; i++ ) {
+                        let payout_amount = eos_bounty * (this.TBeosplayers.eosplayers[i].payin.split(' ')[0] * 1) / topn_payin;
+                        payout_amount = Math.floor(payout_amount * 10000) / 10000;
+                        this.TBeosplayers.eosplayers[i].payout = payout_amount + ' EOS';
+                    }
                 }
 
                 let newestTopnRes = {
