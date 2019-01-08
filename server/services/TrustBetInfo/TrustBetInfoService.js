@@ -104,7 +104,7 @@ class TrustBetInfoService {
                     } else {
                         this.TBeosplayers.eosplayers.sort((a,b) => {
                             if ( b.payin.split(' ')[0] * 1 - a.payin.split(' ')[0] * 1 === 0 ) {
-                                return a.id * 1 - b.id * 1;
+                                return b.id * 1 - a.id * 1;  // 合约id是倒序的，即越早下注的id号越大
                             } else {
                                 return b.payin.split(' ')[0] * 1 - a.payin.split(' ')[0] * 1;
                             }
