@@ -101,6 +101,7 @@ class TrustBetInfoService {
                     if ( _more ) {
                         let _lower = _rows[_rows.length-1].player;
                         this.getTBeosplayers( scope, _lower );
+                        return;
                     } else if ( this.TBeosplayers.eosplayers.length ) {
                         this.TBeosplayers.eosplayers.sort((a,b) => {
                             if ( b.payin.split(' ')[0] * 1 - a.payin.split(' ')[0] * 1 === 0 ) {
@@ -109,8 +110,8 @@ class TrustBetInfoService {
                                 return b.payin.split(' ')[0] * 1 - a.payin.split(' ')[0] * 1;
                             }
                         });
-                        this.TBeosplayers.status = 2;
                     }
+                    this.TBeosplayers.status = 2;
                 } else {  // err or res.statusCode != 200
                     setTimeout(() => {
                         this.getTBeosplayers( scope, lower);
@@ -140,10 +141,11 @@ class TrustBetInfoService {
                     if ( _more ) {
                         let _lower = _rows[_rows.length-1].period;
                         this.getTBeosplat( _lower );
+                        return;
                     } else if ( _rows.length ) {
                         this.TBeosplat.eosplat = _rows[_rows.length-1];
-                        this.TBeosplat.status  = 2;
                     }
+                    this.TBeosplat.status  = 2;
                 } else {
                     setTimeout(() => {
                         this.getTBeosplat( lower );
@@ -172,10 +174,11 @@ class TrustBetInfoService {
 
                     if ( _more ) {
                         this.getTBconfig();
+                        return;
                     } else if ( _rows.length ) {
                         this.TBconfig.config = _rows[_rows.length-1];
-                        this.TBconfig.status = 2;
                     }
+                    this.TBconfig.status = 2;
                 } else {
                     setTimeout(() => {
                         this.getTBconfig();
@@ -191,6 +194,9 @@ class TrustBetInfoService {
 
     newestTopnResHandle() {
         try {
+            let eos_bounty = 0;
+            let period = Math.floor(Date.now()/(1000*3600));
+
             if ( this.TBconfig.status === 0 ) {
                 this.TBconfig.status = 1;
                 this.getTBconfig();
@@ -199,54 +205,55 @@ class TrustBetInfoService {
                 this.TBeosplat.status = 1;
                 this.getTBeosplat();
             }
-            if ( this.TBeosplayers.status === 0 && this.TBeosplat.status === 2 ) {
+            if ( this.TBeosplayers.status === 0 ) {
                 this.TBeosplayers.status = 1;
-                let period = this.TBeosplat.eosplat.period * 1;
                 this.getTBeosplayers(period);
             }
 
             if ( this.TBconfig.status === 2 && this.TBeosplat.status === 2 && this.TBeosplayers.status === 2 ) {
-                // 在不在活动时间
-                let should_pay = false;
-                let now_seconds = Math.floor(Date.now()/1000);
-                let dayth = Math.floor(now_seconds / 86400), timeth = Math.floor(now_seconds % 86400);
-                for ( let tconf of this.TBconfig.config.timeconf ) {
-                    let check_start = Math.floor(tconf.start % 86400);
-                    let check_end   = Math.floor(tconf.end   % 86400);
+                if ( this.TBeosplayers.eosplayers.length ) {
+                    // 在不在活动时间
+                    let should_pay = false;
+                    let now_seconds = Math.floor(Date.now()/1000);
+                    let dayth = Math.floor(now_seconds / 86400), timeth = Math.floor(now_seconds % 86400);
+                    for ( let tconf of this.TBconfig.config.timeconf ) {
+                        let check_start = Math.floor(tconf.start % 86400);
+                        let check_end   = Math.floor(tconf.end   % 86400);
 
-                    if ( (check_start <= timeth && timeth <= check_end) && (tconf.day == 0 || tconf.day == dayth) ) {
-                        should_pay = true;
-                        break;
-                    }
-                }
-
-                // 总奖励
-                let eos_bounty = this.TBeosplat.eosplat.eos_sum.split(' ')[0] * 1 * this.TBconfig.config.rate / 10000;
-                if ( eos_bounty < this.TBconfig.config.lowconf.quantity.split(' ')[0] * 1 && this.TBconfig.config.lowconf.on ) {
-                    eos_bounty = this.TBconfig.config.lowconf.quantity.split(' ')[0] * 1;
-                }
-
-                if ( should_pay ) {
-                    let topn_payin = 0;
-                    let topn = this.TBconfig.config.topn * 1;
-                    if ( topn > this.TBeosplayers.eosplayers.length ) {
-                        topn = this.TBeosplayers.eosplayers.length;
+                        if ( (check_start <= timeth && timeth <= check_end) && (tconf.day == 0 || tconf.day == dayth) ) {
+                            should_pay = true;
+                            break;
+                        }
                     }
 
-                    for ( let i = 0; i < topn; i++ ) {
-                        topn_payin += (this.TBeosplayers.eosplayers[i].payin.split(' ')[0] * 1);
+                    // 总奖励
+                    eos_bounty = this.TBeosplat.eosplat.eos_sum.split(' ')[0] * 1 * this.TBconfig.config.rate / 10000;
+                    if ( eos_bounty < this.TBconfig.config.lowconf.quantity.split(' ')[0] * 1 && this.TBconfig.config.lowconf.on ) {
+                        eos_bounty = this.TBconfig.config.lowconf.quantity.split(' ')[0] * 1;
                     }
 
-                    for ( let i = 0; i < topn; i++ ) {
-                        let payout_amount = eos_bounty * (this.TBeosplayers.eosplayers[i].payin.split(' ')[0] * 1) / topn_payin;
-                        payout_amount = Math.floor(payout_amount * 10000) / 10000;
-                        this.TBeosplayers.eosplayers[i].payout = payout_amount + ' EOS';
+                    if ( should_pay ) {
+                        let topn_payin = 0;
+                        let topn = this.TBconfig.config.topn * 1;
+                        if ( topn > this.TBeosplayers.eosplayers.length ) {
+                            topn = this.TBeosplayers.eosplayers.length;
+                        }
+
+                        for ( let i = 0; i < topn; i++ ) {
+                            topn_payin += (this.TBeosplayers.eosplayers[i].payin.split(' ')[0] * 1);
+                        }
+
+                        for ( let i = 0; i < topn; i++ ) {
+                            let payout_amount = eos_bounty * (this.TBeosplayers.eosplayers[i].payin.split(' ')[0] * 1) / topn_payin;
+                            payout_amount = Math.floor(payout_amount * 10000) / 10000;
+                            this.TBeosplayers.eosplayers[i].payout = payout_amount + ' EOS';
+                        }
                     }
                 }
 
                 let newestTopnRes = {
-                    period: this.TBeosplat.eosplat.period * 1,
-                    eos_bounty: Math.floor(eos_bounty * 10000) / 10000 + ' EOS',
+                    period: period,
+                    eos_bounty: (Math.floor(eos_bounty * 10000) / 10000).toFixed(4) + ' EOS',
                     winners: this.TBeosplayers.eosplayers.slice(0, 100),
                 }
 
