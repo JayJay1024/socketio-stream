@@ -19,6 +19,7 @@ class SocketIOService {
             // pub: redis.redisPub,
             // client: redis.redisClient,
         };
+        this.newestTopn   = null;
 
         server.listen(config.socketioPort);
     }
@@ -105,6 +106,26 @@ class SocketIOService {
                 }
             });
 
+            // 推送EOS排行榜奖励发放记录
+            socket.on('getTopnResList', async (params) => {
+                if ( typeof params === 'string' ) {
+                    params = JSON.parse(params);
+                }
+                let _key = 'tr:trustbetinfo';
+                let _listTopnRes = await this.cacheSvc.getTopnRes(_key, params);
+
+                if ( _listTopnRes && socket.connected ) {
+                    socket.emit( 'TopnResList', _listTopnRes );
+                }
+            });
+
+            // 推送实时排行
+            socket.on('getNewestTopnRes', async (p) => {
+                if ( this.newestTopn && socket.connected ) {
+                    socket.emit( 'NewestTopnRes', this.newestTopn );
+                }
+            });
+
             // this.minertop( socket );
 
             setImmediate(async () => {         
@@ -137,7 +158,7 @@ class SocketIOService {
             }, 3000);  // 3s
         });
 
-        this.redis.sub.subscribe('NewBet', 'NewChat', 'NewChatResult', (err, count) => {  // 需要订阅的频道在这里添加
+        this.redis.sub.subscribe('NewBet', 'NewChat', 'NewTopnRes', 'NewChatResult', 'NewestTopnRes', (err, count) => {  // 需要订阅的频道在这里添加
             if (err) {
                 this.log.error('redis subscribe: ', err);
                 return false;
@@ -156,8 +177,19 @@ class SocketIOService {
                         this.handleIO.emit( 'NewChats', JSON.stringify(_NewChats) );
                         break;
                     }
+                    case 'NewTopnRes': {
+                        this.handleIO.emit( 'NewTopnRes', JSON.stringify(message) );
+                        break;
+                    }
                     case 'NewChatResult': {
                         this.handleIO.emit( 'NewChatResult', JSON.stringify(message) );
+                        break;
+                    }
+                    case 'NewestTopnRes': {
+                        if ( JSON.stringify(message) != JSON.stringify(this.newestTopn) ) {
+                            this.newestTopn = message;
+                            this.handleIO.emit( 'NewestTopnRes', JSON.stringify(message) );
+                        }
                         break;
                     }
                     default: {

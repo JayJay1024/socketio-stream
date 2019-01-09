@@ -211,6 +211,111 @@ class App extends Component {
     }
   }
 
+  onNewTopnRes = (e) => {
+    e.preventDefault();
+
+    if ( socketHandle && socketHandle.connected ) {
+      socketHandle.on('NewTopnRes', (data) => {
+        if ( typeof data === 'string' ) {
+          data = JSON.parse(data);
+        }
+        if ( typeof data === 'string' ) {
+          data = JSON.parse(data);
+        }
+        // 此时data数据结构
+        // {
+        //   block_time: "2019-01-06T08:05:42.000",
+        //   period: 429633,
+        //   eos_bounty: "29.1000 EOS",
+        //   winners: [
+        //     {player: "sihaitongchu", payin: "20.0000 EOS", payout: "13.8571 EOS"},
+        //     {player: "trustbetteam", payin: "12.0000 EOS", payout: "8.3142 EOS"},
+        //     {player: "sihai1111334", payin: "10.0000 EOS", payout: "6.9285 EOS"}
+        //   ],
+        // }
+        console.log('NewTopnRes:', data);
+      });
+      console.log('onNewTopnRes...');
+    }
+  }
+
+  onTopnResList = (e) => {
+    e.preventDefault();
+
+    if ( socketHandle && socketHandle.connected ) {
+      socketHandle.on('TopnResList', (data) => {
+        if ( typeof data === 'string' ) {
+          data = JSON.parse(data);
+        }
+        // data数据结构
+        // {
+        //   after: -1,
+        //   before: 429631,
+        //   data: [
+        //       "{"period":429632,"eos_bounty":"50.0000 EOS","winners":[{"player":"contractabcd","payin":"16.0000 EOS","payout":"25.8064 EOS"},{"player":"aaaaaaaa3333","payin":"8.0000 EOS","payout":"12.9032 EOS"},{"player":"aaaaaaaa2222","payin":"7.0000 EOS","payout":"11.2903 EOS"}],"block_time":"2019-01-05T17:24:22.000"}",
+        //       "{"period":429632,"eos_bounty":"20.0000 EOS","winners":[{"player":"contractabcd","payin":"16.0000 EOS","payout":"10.3225 EOS"},{"player":"aaaaaaaa3333","payin":"8.0000 EOS","payout":"5.1612 EOS"},{"player":"trustbetinfo","payin":"7.0000 EOS","payout":"4.5161 EOS"}],"block_time":"2019-01-05T17:03:44.500"}",
+        //       "{"period":429632,"eos_bounty":"20.0000 EOS","winners":[{"player":"contractabcd","payin":"16.0000 EOS","payout":"10.3225 EOS"},{"player":"aaaaaaaa3333","payin":"8.0000 EOS","payout":"5.1612 EOS"},{"player":"trustbetinfo","payin":"7.0000 EOS","payout":"4.5161 EOS"}],"block_time":"2019-01-05T16:58:40.500"}"
+        //   ]
+        // }
+        console.log('TopnResList 1:', data);
+        // JSON.parse(data.data[0])数据结构
+        // {
+        //   block_time: "2019-01-05T17:24:22.000",  // 区块时间
+        //   eos_bounty: "50.0000 EOS",  // 总奖励
+        //   period: 429632,  // 小时数，即UTC事件秒数除以3600
+        //   winners: [
+        //       {   // 排行榜第一名
+        //           player: "contractabcd",  // 玩家
+        //           payin: "16.0000 EOS",    // 累计投入
+        //           payout: "25.8064 EOS"    // 获得奖励
+        //       },
+        //       {player: "aaaaaaaa3333", payin: "8.0000 EOS", payout: "12.9032 EOS"},  // 排行榜第二名
+        //       {player: "aaaaaaaa2222", payin: "7.0000 EOS", payout: "11.2903 EOS"}   // 排行榜第三名
+        //   ]
+        // }
+        console.log('TopnResList 2:', JSON.parse(data.data[0]));
+      });
+      console.log('onTopnResList...');
+    }
+  }
+
+  getTopnResList = (e) => {
+    e.preventDefault();
+
+    if ( socketHandle && socketHandle.connected ) {
+      // startt 和 records 这两个参数名是固定的
+      let params = {
+        startt: -1,  // 期数，单位小时，即UTC时间秒数除以3600，小于0将从最新的期数返回
+        records: 3,  // 从 startt 往后的多少条记录
+      }
+      socketHandle.emit('getTopnResList', JSON.stringify(params));
+    }
+  }
+
+  onNewestTopnRes = (e) => {
+    e.preventDefault();
+
+    if ( socketHandle && socketHandle.connected ) {
+      socketHandle.on('NewestTopnRes', (data) => {
+        if ( typeof data === 'string' ) {
+          data = JSON.parse(data);
+        }
+        if ( typeof data === 'string' ) {
+          data = JSON.parse(data);
+        }
+        console.log(data);
+      });
+      console.log('onNewestTopnRes...');
+    }
+  }
+
+  getNewestTopnRes = (e) => {
+    e.preventDefault();
+
+    if ( socketHandle && socketHandle.connected ) {
+      socketHandle.emit('getNewestTopnRes','kk');
+    }
+  }
 
   render() {
     return (
@@ -226,6 +331,22 @@ class App extends Component {
         </button>
         <button onClick={this.getChatResultList} className='my-btn'>
           Get ChatResultList
+        </button>
+        <h2>EOS排行榜活动奖励：</h2>
+        <button className='my-btn' onClick={this.onNewTopnRes}>
+          订阅EOS排行榜活动奖励发放通知
+        </button>
+        <button className='my-btn' onClick={this.onTopnResList}>
+          订阅EOS排行榜活动奖励发放记录通知
+        </button>
+        <button className='my-btn' onClick={this.getTopnResList}>
+          获取EOS排行榜活动奖励发放记录
+        </button>
+        <button className='my-btn' onClick={this.onNewestTopnRes}>
+          订阅EOS排行榜实时信息通知
+        </button>
+        <button className='my-btn' onClick={this.getNewestTopnRes}>
+          获取EOS排行榜实时信息
         </button>
       </div>
     );
