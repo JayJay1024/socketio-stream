@@ -211,6 +211,10 @@ class TrustBetInfoService {
             }
 
             if ( this.TBconfig.status === 2 && this.TBeosplat.status === 2 && this.TBeosplayers.status === 2 ) {
+                if ( this.TBconfig.config.lowconf && eos_bounty < this.TBconfig.config.lowconf.quantity.split(' ')[0] * 1 && this.TBconfig.config.lowconf.on ) {
+                    eos_bounty = this.TBconfig.config.lowconf.quantity.split(' ')[0] * 1;
+                }
+
                 if ( this.TBeosplayers.eosplayers.length ) {
                     // 在不在活动时间
                     let should_pay = false;
@@ -227,9 +231,9 @@ class TrustBetInfoService {
                     }
 
                     // 总奖励
-                    eos_bounty = this.TBeosplat.eosplat.eos_sum.split(' ')[0] * 1 * this.TBconfig.config.rate / 10000;
-                    if ( eos_bounty < this.TBconfig.config.lowconf.quantity.split(' ')[0] * 1 && this.TBconfig.config.lowconf.on ) {
-                        eos_bounty = this.TBconfig.config.lowconf.quantity.split(' ')[0] * 1;
+                    let eos_bounty_tmp = this.TBeosplat.eosplat.eos_sum.split(' ')[0] * 1 * this.TBconfig.config.rate / 10000;
+                    if ( eos_bounty < eos_bounty_tmp ) {
+                        eos_bounty = eos_bounty_tmp;
                     }
 
                     if ( should_pay ) {
