@@ -35,13 +35,26 @@ class SocketIOCache {
         return _result;
     }
 
-    async getSicRecords(accout) {
-        let _result = []
+    async getSicRecords(account) {
+        let _result = [];
         try {
-            let _key = `a:${accout}`;
+            let _key = `a:${account}`;
             _result = await this.redis.client.zrevrange(_key, 0, 19);
         } catch(err) {
             this.log.error('get sicbo records', err);
+        }
+        _result = JSON.stringify(_result);
+        return _result;
+    }
+
+    // 水果机下注记录
+    async getCashBetList(account) {
+        let _result = [];
+        try {
+            let _key = `cash:${account}`;
+            _result = await this.redis.client.zrevrange(_key, 0, 19);
+        } catch(err) {
+            this.log.error('catch error when get cash bet list:', err);
         }
         _result = JSON.stringify(_result);
         return _result;

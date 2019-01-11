@@ -78,6 +78,21 @@ class SocketIOService {
                 }
             });
 
+            // 水果机下注记录
+            socket.on('getCashPlayerList', async (account) => {  // 某个玩家
+                let cashBetList = await this.cacheSvc.getCashBetList(account);
+                if (cashBetList && socket.connected) {
+                    socket.emit('CashPlayerList', cashBetList);
+                }
+            });
+            socket.on('getCashAllList', async () => {  // 所有玩家
+                let account = 'trustbetcash';
+                let cashBetList = await this.cacheSvc.getCashBetList(account);
+                if (cashBetList && socket.connected) {
+                    socket.emit('CashAllList', cashBetList);
+                }
+            });
+
             // 推送聊天记录
             socket.on('getChatList', async (params) => {
                 if ( typeof params === 'string' ) {

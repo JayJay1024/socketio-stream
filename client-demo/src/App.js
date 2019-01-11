@@ -332,6 +332,49 @@ class App extends Component {
     }
   }
 
+  // 水果机
+  onCashBetList = (e) => {  // 订阅
+    e.preventDefault();
+
+    if (socketHandle && socketHandle.connected) {
+      // 所有玩家
+      socketHandle.on('CashAllList', (data) => {
+        if ( typeof data === 'string' ) {
+          data = JSON.parse(data);
+        }
+        for (let i = 0; i < data.length; i++) {
+          if ( typeof data[i] === 'string' ) {
+            data[i] = JSON.parse(data[i]);
+          }
+        }
+        console.log('CashAllList:', data);
+      });
+      console.log('CashAllList...');
+
+      // 某个玩家
+      socketHandle.on('CashPlayerList', (data) => {
+        if ( typeof data === 'string' ) {
+          data = JSON.parse(data);
+        }
+        for (let i = 0; i < data.length; i++) {
+          if ( typeof data[i] === 'string' ) {
+            data[i] = JSON.parse(data[i]);
+          }
+        }
+        console.log('CashPlayerList:', data);
+      });
+      console.log('CashPlayerList...');
+    }
+  }
+  getCashBetList = (e) => {  // 获取
+    e.preventDefault();
+
+    if (socketHandle && socketHandle.connected) {
+      socketHandle.emit('getCashAllList');  // 获取所有玩家记录
+      socketHandle.emit('getCashPlayerList', 'aaaaaaaa3333');  // 获取某玩家记录
+    }
+  }
+
   render() {
     return (
       <div className="my-box">
@@ -362,6 +405,13 @@ class App extends Component {
         </button>
         <button className='my-btn' onClick={this.getNewestTopnRes}>
           获取EOS排行榜实时信息
+        </button>
+        <h2>水果机下注记录：</h2>
+        <button className='my-btn' onClick={this.onCashBetList}>
+          订阅下注记录的推送
+        </button>
+        <button className='my-btn' onClick={this.getCashBetList}>
+          获取下注记录
         </button>
       </div>
     );

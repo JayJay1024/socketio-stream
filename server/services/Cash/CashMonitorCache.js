@@ -26,8 +26,8 @@ class CashMonitorCache {
             let _quantity = data.payin.split(' ');
 
             // redis keys
-            let _keyPlayer    = `cp:${_player}`;            // 个人玩家记录
-            let _keyGame      = `cg:${this.gameContract}`;  // 所有玩家的记录
+            let _keyPlayer    = `cash:${_player}`;            // 个人玩家记录
+            let _keyGame      = `cash:${this.gameContract}`;  // 所有玩家的记录
             let _keyDailyRank = `r:${_today}`;              // 日排行榜
 
             let _data  = JSON.stringify(data);
