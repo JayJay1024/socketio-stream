@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import io from 'socket.io-client';
 // import logo from './logo.svg';
 import './App.css';
+import { join } from 'path';
 
 const socketSvr = 'http://localhost:8080';
 var socketHandle = null;
@@ -21,6 +22,8 @@ class App extends Component {
     socketHandle = io.connect(socketSvr);
     socketHandle.on('connect', () => {
       console.log( 'socket.io connected' );
+
+      return;
 
       // 连接上后订阅EosDailyRank消息，接收EOS下注日排行榜
       socketHandle.on('EosDailyRank', (data) => {
@@ -375,6 +378,170 @@ class App extends Component {
     }
   }
 
+  // ******************************* 牛牛 Start ****************************
+  // 打开游戏
+  openBull = (e) => {
+    e.preventDefault();
+
+    if (socketHandle && socketHandle.connected) {
+      // 发送 'openBull' 请求后会推送 'welcomeBull'
+      socketHandle.on('welcomeBull', (data) => {
+        console.log( 'welcomeBull:', JSON.parse(data) );
+      });
+
+      // 牛牛阶段订阅
+      socketHandle.on('BullStep', (data) => {
+        let dataJson = JSON.parse(data);
+        let infoJson = JSON.parse(dataJson.info);
+        switch (dataJson.step) {
+          case 'BullResult': {    // 开奖结果
+            console.log('BullResult:', infoJson);
+            break;
+          }
+          case 'NewBullBet': {    // 玩家投注结果
+            console.log('NewBullBet:', infoJson);
+            break;
+          }
+          case 'BullGameStop': {  // 一局结束
+            console.log('BullGameStop:', infoJson);
+            break;
+          }
+          case 'BullGameStart': { // 新一局开始
+            console.log('BullGameStart:', infoJson);
+            break;
+          }
+        }
+      });
+
+      // 庄家队列(包含当前庄家队列、预约上庄队列、预约下庄队列)推送订阅，队列有改变就会自动推送
+      socketHandle.on('onBullDealersChange', (data) => {
+        console.log('bull dealers change:', JSON.parse(data));
+      });
+
+      // 最近5局牌型订阅
+      socketHandle.on('onBullLastNCards', (data) => {
+        console.log('last five bull cards:', JSON.parse(data));
+      });
+
+      // 投注记录订阅
+      socketHandle.on('onBullBetRecords', (data) => {
+        console.log('bull bet records:', JSON.parse(data));
+      });
+
+      // 上庄弹窗订阅
+      socketHandle.on('onBullDealerCmd', (data) => {
+        let dataJson = JSON.parse(data);
+        switch (dataJson.type) {
+          case 'CurrentDealers': {  // 当前庄家
+            console.log('CurrentDealers', dataJson);
+            break;
+          }
+          case 'DealersWaiting': {  // 预约上庄
+            console.log('DealersWaiting:', dataJson);
+            break;
+          }
+          case 'DealersIncome': {   // 庄家收益
+            console.log('DealersIncome:', dataJson);
+            break;
+          }
+          case 'MyDealer': {        // 我的上庄
+            console.log('MyDealer:', dataJson);
+            break;
+          }
+        }
+      });
+
+      // 在线玩家订阅
+      socketHandle.on('onBullOnlinePlayers', (data) => {
+        console.log('bull online players:', JSON.parse(data));
+      });
+
+      // 进入游戏时发送 'openBull'
+      console.log('now we open bull game~');
+      socketHandle.emit('openBull', 'now we open bull game');
+    }
+  }
+
+  // 获取最近5局牌型记录
+  getBullLastFiveCards = (e) => {
+    e.preventDefault();
+
+    if (socketHandle && socketHandle.connected) {
+      console.log('get bull last five result cards~');
+      socketHandle.emit('getBullLastNCards', 'get bull last five result cards');
+    }
+  }
+
+  // 获取投注记录
+  getBullBetRecords = (e) => {
+    e.preventDefault();
+
+    if (socketHandle && socketHandle.connected) {
+      let account = 'all';  // 所有投注记录
+      // let account = 'sihai1111334';  // 某个玩家的投注
+      socketHandle.emit('getBullBetRecords', account);
+    }
+  }
+
+  // 上庄弹窗
+  // 我的庄家
+  getMyDealer = (e) => {
+    e.preventDefault();
+
+    if (socketHandle && socketHandle.connected) {
+      let cmdStr = JSON.stringify({
+        type: 'MyDealer',
+        start: -1,  // -1 返回最新一期
+        dealer: 'aaaaaaaa3333',
+      });
+      socketHandle.emit('BullDealerCmd', cmdStr);
+    }
+  }
+  // 当前庄家
+  getCurrencyDealers = (e) => {
+    e.preventDefault();
+
+    if (socketHandle && socketHandle.connected) {
+      let cmdStr = JSON.stringify({
+        type: 'CurrentDealers',
+      });
+      socketHandle.emit('BullDealerCmd', cmdStr);
+    }
+  }
+  // 预约上庄
+  getDealersWaiting = (e) => {
+    e.preventDefault();
+
+    if (socketHandle && socketHandle.connected) {
+      let cmdStr = JSON.stringify({
+        type: 'DealersWaiting',
+      });
+      socketHandle.emit('BullDealerCmd', cmdStr);
+    }
+  }
+  // 庄家收益
+  getDealersIncome = (e) => {
+    e.preventDefault();
+
+    if (socketHandle && socketHandle.connected) {
+      let cmdStr = JSON.stringify({
+        type: 'DealersIncome',
+        start: -1, // -1 表示最新一天
+      });
+      socketHandle.emit('BullDealerCmd', cmdStr);
+    }
+  }
+
+  // 获取本局在线玩家
+  getBullOnlinePlayers = (e) => {
+    e.preventDefault();
+
+    if (socketHandle && socketHandle.connected) {
+      socketHandle.emit('getBullOnlinePlayers', 'get bull online players');
+    }
+  }
+  // ******************************* 牛牛 End   ****************************
+
   render() {
     return (
       <div className="my-box">
@@ -412,6 +579,31 @@ class App extends Component {
         </button>
         <button className='my-btn' onClick={this.getCashBetList}>
           获取下注记录
+        </button>
+        <h2>牛牛：</h2>
+        <button className='my-btn' onClick={this.openBull}>
+          进入牛牛游戏
+        </button>
+        <button className='my-btn' onClick={this.getBullLastFiveCards}>
+          获取最近5局牌型记录
+        </button>
+        <button className='my-btn' onClick={this.getBullBetRecords}>
+          获取投注记录
+        </button>
+        <button className='my-btn' onClick={this.getMyDealer}>
+          （上庄弹窗）我的庄家
+        </button>
+        <button className='my-btn' onClick={this.getCurrencyDealers}>
+          （上庄弹窗）当前庄家
+        </button>
+        <button className='my-btn' onClick={this.getDealersWaiting}>
+          （上庄弹窗）预约上庄
+        </button>
+        <button className='my-btn' onClick={this.getDealersIncome}>
+          （上庄弹窗）庄家收益
+        </button>
+        <button className='my-btn' onClick={this.getBullOnlinePlayers}>
+          获取本局在线玩家
         </button>
       </div>
     );

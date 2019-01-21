@@ -175,6 +175,153 @@ class SocketIOCache {
         _result = JSON.stringify(_result);
         return _result;
     }
+
+    // ******************************* 牛牛 Start ****************************
+    async getBullInfo() {
+        let ret = null;
+        try {
+            let tbPeriods = await this.redis.client.get('bull:tb:periods');
+            let tbDealers = await this.redis.client.get('bull:tb:dealers');
+
+            if (tbPeriods && tbDealers) {
+                ret = JSON.parse(tbPeriods);
+                let tbDealersJson = JSON.parse(tbDealers);
+                ret.curdealers = tbDealersJson.dealers;
+                ret.ondealerswait = tbDealersJson.ondealerswait;
+                ret.offdealerswait = tbDealersJson.offdealerswait;
+            }
+        } catch (err) {
+            this.log.error('catch error when get bull table periods:', err);
+        }
+        return ret;
+    }
+    // 获取最近5局的牌型
+    async getBullLastFiveCards() {
+        let ret = [];
+        try {
+            let key = 'bull:results', max = this.redisRecsMax, min = 0, offset = 0, count = 5;
+            let results = await this.redis.client.zrevrangebyscore(key, max, min, 'LIMIT', offset, count);
+            for (let result of results) {
+                let resultJson = JSON.parse(result);
+                ret.push(resultJson.vcard);
+            }
+        } catch (err) {
+            this.log.error('catch error when get last five cards:', err);
+        }
+        return ret;
+    }
+    // 投注记录（所有投注记录/某个玩家投注记录）
+    async getBullBetRecords(account) {
+        let ret = [];
+        try {
+            if (account) {
+                let key = `bull:bet:records:${account}`;
+                ret = await this.redis.client.zrevrange(key, 0, 19);  // 返回最新 20 条记录
+            }
+        } catch (err) {
+            this.log.error('catch error when get bull bets:', err);
+        }
+        return ret;
+    }
+    // 当前庄家/预约上庄
+    async getBullCurAndWaitingDealers(cmdJson) {
+        let ret = {
+            type: cmdJson.type,
+            data: [],
+        };
+
+        try {
+            let dataStr = await this.redis.client.get('bull:tb:dealers');
+            if (dataStr) {
+                let dataJson = JSON.parse(dataStr);
+
+                switch (cmdJson.type) {
+                    case 'CurrentDealers': {  // 当前庄家
+                        ret.data = dataJson.dealers;
+                        break;
+                    }
+                    case 'DealersWaiting': {  // 预约上庄
+                        ret.data = dataJson.ondealerswait;
+                        break;
+                    }
+                }
+            }
+        } catch (err) {
+            this.log.error('catch error when get bull dealer list:', err);
+        }
+        return ret;
+    }
+    // 我的庄家/庄家收益
+    async getBullMyAndAllDealerIncome(cmdJson) {
+        let ret = {
+            data: [],
+            after: -1,
+            before: -1,
+            currency: -1,
+            type: cmdJson.type,
+        };
+
+        try {
+            let key = '';
+            if (cmdJson.type === 'MyDealer') {
+                key = `bull:dealer:${cmdJson.dealer}`;
+            } else if (cmdJson.type === 'DealersIncome') {
+                key = 'bull:dealer:all';
+            }
+
+            let newest = await this.redis.client.zrevrangebyscore(key, this.redisRecsMax, 0, 'LIMIT', 0, 1);
+            if (newest.length) {
+                let newestJson = JSON.parse(newest[0]);
+
+                if (cmdJson.start > 0) {
+                    let req = await this.redis.client.zrevrangebyscore(key, cmdJson.start, cmdJson.start, 'LIMIT', 0, 1500);
+                    if (req.length) {
+                        ret.data = req;
+                        ret.currency = cmdJson.start;
+
+                        let after  = await this.redis.client.zrangebyscore(key, cmdJson.start + 1, this.redisRecsMax, 'LIMIT', 0, 1);
+                        let before = await this.redis.client.zrevrangebyscore(key, cmdJson.start - 1, 0,                 'LIMIT', 0, 1);
+
+                        if (after.length) {
+                            ret.after = JSON.parse(after[0]).score;
+                        }
+                        if (before.length) {
+                            ret.before = JSON.parse(before[0]).score;
+                        }
+                    }
+                } else {
+                    if (newestJson.score > 0) {
+                        let before = await this.redis.client.zrevrangebyscore(key, newestJson.score - 1, 0, 'LIMIT', 0, 1);
+                        if (before.length) {
+                            ret.before = JSON.parse(before[0]).score;
+                        }
+                    }
+                    let req = await this.redis.client.zrevrangebyscore(key, newestJson.score, newestJson.score, 'LIMIT', 0, 1500);
+                    ret.data = req;
+                    ret.currency = newestJson.score;
+                }
+            }
+        } catch (err) {
+            this.log.error('catch error when get bull my and all dealer income:', err);
+        }
+        return ret;
+    }
+
+    // 在线玩家
+    async getBullOnlinePlayers() {
+        let ret = [];
+        try {
+            let datastr = await this.redis.client.get('bull:tb:periods');
+            if (datastr) {
+                let dataJson = JSON.parse(datastr);
+                ret = dataJson.bets;
+            }
+        } catch (err) {
+            this.log.error('catch error when get online players:', err);
+        }
+        return ret;
+    }
+    // ******************************* 牛牛 End   ****************************
 }
 
 module.exports = SocketIOCache;

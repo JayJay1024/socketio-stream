@@ -141,6 +141,57 @@ class SocketIOService {
                 }
             });
 
+            // ******************************* 牛牛 Start ****************************
+            // 进入牛牛游戏
+            socket.on('openBull', async (p) => {
+                let data = await this.cacheSvc.getBullInfo();
+                if (data && socket.connected) {
+                    socket.emit('welcomeBull', JSON.stringify(data));
+                }
+            });
+            // 最近5局牌型记录
+            socket.on('getBullLastNCards', async (p) => {
+                let data = await this.cacheSvc.getBullLastFiveCards();
+                if (data.length && socket.connected) {
+                    socket.emit('onBullLastNCards', JSON.stringify(data));
+                }
+            });
+            // 投注记录
+            socket.on('getBullBetRecords', async (account) => {
+                let data = await this.cacheSvc.getBullBetRecords(account);
+                if (data.length && socket.connected) {
+                    socket.emit('onBullBetRecords', JSON.stringify(data));
+                }
+            });
+            // 上庄弹窗
+            socket.on('BullDealerCmd', async (cmdStr) => {
+                let data = null, cmdJson = JSON.parse(cmdStr);
+                if (cmdJson === null) { return; }
+                switch (cmdJson.type) {
+                    case 'CurrentDealers':    // 当前庄家
+                    case 'DealersWaiting': {  // 预约上庄
+                        data = await this.cacheSvc.getBullCurAndWaitingDealers(cmdJson);
+                        break;
+                    }
+                    case 'DealersIncome':     // 庄家收益
+                    case 'MyDealer': {        // 我的庄家
+                        data = await this.cacheSvc.getBullMyAndAllDealerIncome(cmdJson);
+                        break;
+                    }
+                }
+                if (data && socket.connected) {
+                    socket.emit('onBullDealerCmd', JSON.stringify(data));
+                }
+            });
+            // 在线玩家
+            socket.on('getBullOnlinePlayers', async (p) => {
+                let data = await this.cacheSvc.getBullOnlinePlayers();
+                if (data.length && socket.connected) {
+                    socket.emit('onBullOnlinePlayers', JSON.stringify(data));
+                }
+            });
+            // ******************************* 牛牛 End   ****************************
+
             // this.minertop( socket );
 
             setImmediate(async () => {         
@@ -173,7 +224,7 @@ class SocketIOService {
             }, 3000);  // 3s
         });
 
-        this.redis.sub.subscribe('NewBet', 'NewCashBet', 'NewChat', 'NewTopnRes', 'NewChatResult', 'NewestTopnRes', (err, count) => {  // 需要订阅的频道在这里添加
+        this.redis.sub.subscribe('NewBet', 'NewCashBet', 'NewChat', 'NewTopnRes', 'NewChatResult', 'NewestTopnRes', 'BullResult', 'NewBullBet', 'BullGameStop', 'BullGameStart', 'BullDealersChange', (err, count) => {  // 需要订阅的频道在这里添加
             if (err) {
                 this.log.error('redis subscribe: ', err);
                 return false;
@@ -211,6 +262,23 @@ class SocketIOService {
                         }
                         break;
                     }
+                    // ******************************* 牛牛 Start ****************************
+                    case 'BullResult':
+                    case 'NewBullBet':
+                    case 'BullGameStop':
+                    case 'BullGameStart': {
+                        let stepInfo = {
+                            step: channel,
+                            info: message
+                        }
+                        this.handleIO.emit('BullStep', JSON.stringify(stepInfo));
+                        break;
+                    }
+                    case 'BullDealersChange': {
+                        this.handleIO.emit('onBullDealersChange', message);
+                        break;
+                    }
+                    // ******************************* 牛牛 End   ****************************
                     default: {
                         this.log.info(`invalid channel: ${channel} !`);
                     }

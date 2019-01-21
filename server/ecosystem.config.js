@@ -65,6 +65,25 @@ module.exports = {
       LOG_PATH: `${ROOTDIR}/logs/cash/log.log`,
     }
   }, {
+    name: 'Bull',
+    script: `${ROOTDIR}/services/Bull/startup.js`,
+
+    // Options reference: https://pm2.io/doc/en/runtime/reference/ecosystem-file/
+    instances: 1,
+    autorestart: true,
+    watch: false,
+    max_memory_restart: '1G',
+    env: {
+      NODE_ENV: 'development',
+      CONFIG_PATH: `${ROOTDIR}/services/Bull/config.js`,
+      LOG_PATH: `${ROOTDIR}/logs/bull/log.log`,
+    },
+    env_production: {
+      NODE_ENV: 'production',
+      CONFIG_PATH: `${ROOTDIR}/services/Bull/config.js`,
+      LOG_PATH: `${ROOTDIR}/logs/bull/log.log`,
+    }
+  }, {
     name: 'Sicbo',
     script: `${ROOTDIR}/services/SicBo/startup.js`,
 

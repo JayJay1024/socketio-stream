@@ -13,7 +13,7 @@ module.exports = {
     // eos rpc
     // getInfoUrl: apiUri + '/v1/chain/get_info',
     // getblockUrl: apiUri + '/v1/chain/get_block',
-    getTableRows: apiUri + '/v1/chain/get_table_rows',
+    getTableUrl: apiUri + '/v1/chain/get_table_rows',
     getActionsUrl: apiUri + '/v1/history/get_actions',
     // getTransactionUrl: apiUri + '/v1/history/get_transaction',
 
@@ -22,5 +22,6 @@ module.exports = {
     mineContract: 'trustbetmine',
     chatContract: 'trustbetchat',
     cashContract: 'trustbetcash',
+    bullContract: 'trustbetbull',
     sicboContract: 'trustbetgame',
 };

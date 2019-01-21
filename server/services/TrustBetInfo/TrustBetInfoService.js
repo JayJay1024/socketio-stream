@@ -10,7 +10,7 @@ class TrustBetInfoService {
         this.lastAseq     = 0;
         this.gameContract = config.infoContract;
         this.getActionUri = config.getActionsUrl;
-        this.getTableRows = config.getTableRows;
+        this.getTableUrl  = config.getTableUrl;
 
         // status: 0(还没开始请求)，1(请求中)，2(请求完成)
         this.TBconfig     = {status: 0, config: {}};
@@ -79,7 +79,7 @@ class TrustBetInfoService {
     getTBeosplayers(scope='', lower='') {
         try {
             request({
-                url: this.getTableRows,
+                url: this.getTableUrl,
                 method: 'POST',
                 json: true,
                 body: { code: this.gameContract, scope: scope, table: 'eosplayers', limit: 120, lower_bound: lower, json: true },
@@ -128,7 +128,7 @@ class TrustBetInfoService {
     getTBeosplat(lower='') {
         try {
             request({
-                url: this.getTableRows,
+                url: this.getTableUrl,
                 method: 'POST',
                 json: true,
                 body: { code: this.gameContract, scope: this.gameContract, table: 'eosplat', limit: 120, lower_bound: lower, json: true },
@@ -162,7 +162,7 @@ class TrustBetInfoService {
     getTBconfig() {
         try {
             request({
-                url: this.getTableRows,
+                url: this.getTableUrl,
                 method: 'POST',
                 json: true,
                 body: { code: this.gameContract, scope: this.gameContract, table: 'config', json: true },
