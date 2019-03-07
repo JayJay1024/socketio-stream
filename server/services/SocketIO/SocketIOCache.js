@@ -266,7 +266,7 @@ class SocketIOCache {
             if (cmdJson.type === 'MyDealer') {
                 key = `bull:dealer:${cmdJson.dealer}`;
             } else if (cmdJson.type === 'DealersIncome') {
-                key = 'bull:dealer:all';
+                key = 'bull:dealer:all2';
             }
 
             let newest = await this.redis.client.zrevrangebyscore(key, this.redisRecsMax, 0, 'LIMIT', 0, 1);

@@ -286,7 +286,7 @@ class BullMonitorCache {
                 this.thisRoundDealersPayout = 0;
 
                 // 所有庄家上一期
-                let key = 'bull:dealer:all', score = Math.floor(((new Date(data.block_time)).getTime() / 1000 + 8 * 3600) / 86400);  // score 为这一天
+                let key = 'bull:dealer:all2', score = Math.floor(((new Date(data.block_time)).getTime() / 1000 + 8 * 3600) / 86400);  // score 为这一天
                 let dataStr = JSON.stringify({
                     score: score,
                     time: score,
