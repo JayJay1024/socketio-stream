@@ -322,11 +322,11 @@ class BullMonitorCache {
             }
 
             for (let dealer of data.dealers) {
-                if (data.period === 0) {   // 本期第一局
+                if (data.period === 0 && this.thisRoundDealersPayout === 0) {   // 本期第一局
                     this.thisRoundDealersPayin  = this.thisRoundDealersPayin  + Math.floor(dealer.balance_begin.split(' ')[0] * 10000);
                 }
                 let maxPeriod = Math.floor(data.id / data.round);
-                if (data.period === maxPeriod - 1) {  // 本期最后一局
+                if (data.period === maxPeriod - 1 && this.thisRoundDealersPayin !== 0) {  // 本期最后一局
                     this.thisRoundDealersPayout = this.thisRoundDealersPayout + Math.floor(dealer.balance_end.split(' ')[0]   * 10000);
                 }
 
