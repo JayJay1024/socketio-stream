@@ -159,7 +159,7 @@ class SocketIOService {
             // 投注记录
             socket.on('getBullBetRecords', async (account) => {
                 let data = await this.cacheSvc.getBullBetRecords(account);
-                if (data.length && socket.connected) {
+                if (data && socket.connected) {
                     socket.emit('onBullBetRecords', JSON.stringify(data));
                 }
             });

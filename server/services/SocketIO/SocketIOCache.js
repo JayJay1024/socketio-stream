@@ -212,11 +212,14 @@ class SocketIOCache {
     }
     // 投注记录（所有投注记录/某个玩家投注记录）
     async getBullBetRecords(account) {
-        let ret = [];
+        let ret = {
+            type: account,
+            data: [],
+        };
         try {
             if (account) {
                 let key = `bull:bet:records:${account}`;
-                ret = await this.redis.client.zrevrange(key, 0, 19);  // 返回最新 20 条记录
+                ret.data = await this.redis.client.zrevrange(key, 0, 19);  // 返回最新 20 条记录
             }
         } catch (err) {
             this.log.error('catch error when get bull bets:', err);
