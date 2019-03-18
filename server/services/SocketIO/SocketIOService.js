@@ -71,7 +71,7 @@ class SocketIOService {
             });
 
             socket.on('Login', async (player) => {
-                this.log.info( `login: ${player}` );
+                // this.log.info( `login: ${player}` );
                 let playerBetList = await this.cacheSvc.getSicRecords( player );
                 if ( playerBetList && socket.connected ) {
                     socket.emit( 'PlayerBetList', playerBetList );
@@ -192,6 +192,81 @@ class SocketIOService {
             });
             // ******************************* 牛牛 End   ****************************
 
+            // ******************************* DragonEX Start ****************************
+            // 进入牛牛游戏
+            socket.on('openDGDTBull', async (p) => {
+                let data = await this.cacheSvc.getDGDTBullInfo();
+                if (data && socket.connected) {
+                    socket.emit('welcomeDGDTBull', JSON.stringify(data));
+                }
+            });
+            socket.on('openDGUSDTBull', async (p) => {
+                let data = await this.cacheSvc.getDGUSDTBullInfo();
+                if (data && socket.connected) {
+                    socket.emit('welcomeDGUSDTBull', JSON.stringify(data));
+                }
+            });
+            socket.on('openDGEOSBull', async (p) => {
+                let data = await this.cacheSvc.getDGEOSBullInfo();
+                if (data && socket.connected) {
+                    socket.emit('welcomeDGEOSBull', JSON.stringify(data));
+                }
+            });
+            socket.on('openDGSAFEBull', async (p) => {
+                let data = await this.cacheSvc.getDGSAFEBullInfo();
+                if (data && socket.connected) {
+                    socket.emit('welcomeDGSAFEBull', JSON.stringify(data));
+                }
+            });
+            socket.on('openDGSNETBull', async (p) => {
+                let data = await this.cacheSvc.getDGSNETBullInfo();
+                if (data && socket.connected) {
+                    socket.emit('welcomeDGSNETBull', JSON.stringify(data));
+                }
+            });
+            socket.on('openDGTNBBull', async (p) => {
+                let data = await this.cacheSvc.getDGTNBBullInfo();
+                if (data && socket.connected) {
+                    socket.emit('welcomeDGTNBBull', JSON.stringify(data));
+                }
+            });
+            // 最近5局牌型记录（和主网EOS牌型一样）
+            // 投注记录
+            socket.on('getDGBullBetRecords', async (account) => {
+                let data = await this.cacheSvc.getDGBullBetRecords(account);
+                if (data && socket.connected) {
+                    socket.emit('onDGBullBetRecords', JSON.stringify(data));
+                }
+            });
+            // 上庄弹窗
+            socket.on('DGBullDealerCmd', async (cmdStr) => {
+                let data = null, cmdJson = JSON.parse(cmdStr);
+                if (cmdJson === null) { return; }
+                switch (cmdJson.type) {
+                    case 'CurrentDealers':    // 当前庄家
+                    case 'DealersWaiting': {  // 预约上庄
+                        data = await this.cacheSvc.getDGBullCurAndWaitingDealers(cmdJson);
+                        break;
+                    }
+                    case 'DealersIncome':     // 庄家收益
+                    case 'MyDealer': {        // 我的庄家
+                        data = await this.cacheSvc.getDGBullMyAndAllDealerIncome(cmdJson);
+                        break;
+                    }
+                }
+                if (data && socket.connected) {
+                    socket.emit('onDGBullDealerCmd', JSON.stringify(data));
+                }
+            });
+            // 获取支付后结果
+            socket.on('getDGPlaybull', async (p) => {
+                let data = this.cacheSvc.getPlayRes(p);
+                if (socket.connected) {
+                    socket.emit('onDGPlaybull', data);
+                }
+            });
+            // ******************************* DragonEX End   ****************************
+
             // this.minertop( socket );
 
             setImmediate(async () => {         
@@ -224,7 +299,14 @@ class SocketIOService {
             }, 3000);  // 3s
         });
 
-        this.redis.sub.subscribe('NewBet', 'NewCashBet', 'NewChat', 'NewTopnRes', 'NewChatResult', 'NewestTopnRes', 'BullResult', 'NewBullBet', 'BullGameStop', 'BullGameStart', 'BullDealersChange', (err, count) => {  // 需要订阅的频道在这里添加
+        this.redis.sub.subscribe('NewBet', 'NewCashBet', 'NewChat', 'NewTopnRes', 'NewChatResult', 'NewestTopnRes',
+                                 'BullResult', 'NewBullBet', 'BullGameStop', 'BullGameStart', 'BullDealersChange',
+                                  // DragonEX
+                                 'DGPlayBull', 'DGBullResult', 'DGNewBullBet',
+                                 'DGDTBullGameStop', 'DGDTBullGameStart', 'DGUSDTBullGameStop', 'DGUSDTBullGameStart', 'DGEOSBullGameStop', 'DGEOSBullGameStart',
+                                 'DGSAFEBullGameStop', 'DGSAFEBullGameStart', 'DGSNETBullGameStop', 'DGSNETBullGameStart', 'DGTNBBullGameStop', 'DGTNBBullGameStart',
+                                 'DGDTBullDealersChange', 'DGUSDTBullDealersChange', 'DGEOSBullDealersChange', 'DGSAFEBullDealersChange', 'DGSNETBullDealersChange', 'DGTNBBullDealersChange',
+                                 (err, count) => {  // 需要订阅的频道在这里添加
             if (err) {
                 this.log.error('redis subscribe: ', err);
                 return false;
@@ -232,6 +314,7 @@ class SocketIOService {
             this.log.info(`redis subscribed ${count} channels...`);
 
             this.redis.sub.on('message', (channel, message) => {  // 接收频道消息
+                this.log.info(`redis channel: ${channel}`);
                 switch (channel) {
                     case 'NewBet': {
                         this.handleIO.emit( 'NewBet', JSON.stringify(message) );
@@ -279,6 +362,48 @@ class SocketIOService {
                         break;
                     }
                     // ******************************* 牛牛 End   ****************************
+                    // ******************************* DragonEX Start ****************************
+                    case 'DGBullResult':
+                    case 'DGNewBullBet':
+                    // DT
+                    case 'DGDTBullGameStop':
+                    case 'DGDTBullGameStart':
+                    // USDT
+                    case 'DGUSDTBullGameStop':
+                    case 'DGUSDTBullGameStart':
+                    // EOS
+                    case 'DGEOSBullGameStop':
+                    case 'DGEOSBullGameStart':
+                    // SAFE
+                    case 'DGSAFEBullGameStop':
+                    case 'DGSAFEBullGameStart':
+                    // SNET
+                    case 'DGSNETBullGameStop':
+                    case 'DGSNETBullGameStart':
+                    // TNB
+                    case 'DGTNBBullGameStop':
+                    case 'DGTNBBullGameStart': {
+                        let stepInfo = {
+                            step: channel,
+                            info: message
+                        }
+                        this.handleIO.emit('DGBullStep', JSON.stringify(stepInfo));
+                        break;
+                    }
+                    case 'DGDTBullDealersChange':
+                    case 'DGUSDTBullDealersChange':
+                    case 'DGEOSBullDealersChange':
+                    case 'DGSAFEBullDealersChange':
+                    case 'DGSNETBullDealersChange':
+                    case 'DGTNBBullDealersChange': {
+                        let event = `on${channel}`;
+                        this.handleIO.emit(event, message);
+                        break;
+                    }
+                    case 'DGPlayBull': {
+                        this.handleIO.emit('onDGPlaybull', message);
+                    }
+                    // ******************************* DragonEX Start ****************************
                     default: {
                         this.log.info(`invalid channel: ${channel} !`);
                     }

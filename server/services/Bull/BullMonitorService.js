@@ -17,6 +17,7 @@ class BullMonitorService {
     start() {
         this.log.info('monitor service start...');
         this.fetchTbPeriods();  // 轮询合约表
+        this.fetchDGTbPeriods();
         this.fetchTbOthers();   // 轮询合约表
         this.actionsHandler();  // 轮询合约 action
     }
@@ -54,23 +55,109 @@ class BullMonitorService {
         }
     }
 
+    // 检查合约龙网 periods 表
+    fetchDGTbPeriods() {
+        try {
+            let periodsDT = rp({
+                url: this.getTableUrl,
+                method: 'POST',
+                json: true,
+                body: { code: this.gameContract, scope: 'DT', table: 'lperiods', limit: 2, lower_bound: '', json: true, reverse: true },  // reverse: true => 以倒序返回表记录
+                timeout: 5000,  // 如果不设置超时，request可能出现一直不返回
+            })
+            .then(res => { return res; })
+            .catch(err => { return null; });
+
+            let periodsUSDT = rp({
+                url: this.getTableUrl,
+                method: 'POST',
+                json: true,
+                body: { code: this.gameContract, scope: 'USDT', table: 'lperiods', limit: 2, lower_bound: '', json: true, reverse: true },  // reverse: true => 以倒序返回表记录
+                timeout: 5000,  // 如果不设置超时，request可能出现一直不返回
+            })
+            .then(res => { return res; })
+            .catch(err => { return null; });
+
+            let periodsEOS = rp({
+                url: this.getTableUrl,
+                method: 'POST',
+                json: true,
+                body: { code: this.gameContract, scope: 'EOS', table: 'lperiods', limit: 2, lower_bound: '', json: true, reverse: true },  // reverse: true => 以倒序返回表记录
+                timeout: 5000,  // 如果不设置超时，request可能出现一直不返回
+            })
+            .then(res => { return res; })
+            .catch(err => { return null; });
+
+            let periodsSAFE = rp({
+                url: this.getTableUrl,
+                method: 'POST',
+                json: true,
+                body: { code: this.gameContract, scope: 'SAFE', table: 'lperiods', limit: 2, lower_bound: '', json: true, reverse: true },  // reverse: true => 以倒序返回表记录
+                timeout: 5000,  // 如果不设置超时，request可能出现一直不返回
+            })
+            .then(res => { return res; })
+            .catch(err => { return null; });
+
+            let periodsSNET = rp({
+                url: this.getTableUrl,
+                method: 'POST',
+                json: true,
+                body: { code: this.gameContract, scope: 'SNET', table: 'lperiods', limit: 2, lower_bound: '', json: true, reverse: true },  // reverse: true => 以倒序返回表记录
+                timeout: 5000,  // 如果不设置超时，request可能出现一直不返回
+            })
+            .then(res => { return res; })
+            .catch(err => { return null; });
+
+            let periodsTNB = rp({
+                url: this.getTableUrl,
+                method: 'POST',
+                json: true,
+                body: { code: this.gameContract, scope: 'TNB', table: 'lperiods', limit: 2, lower_bound: '', json: true, reverse: true },  // reverse: true => 以倒序返回表记录
+                timeout: 5000,  // 如果不设置超时，request可能出现一直不返回
+            })
+            .then(res => { return res; })
+            .catch(err => { return null; });
+
+            Promise
+                .all([periodsDT, periodsUSDT, periodsEOS, periodsSAFE, periodsSNET, periodsTNB])
+                .then(([tbDT, tbUSDT, tbEOS, tbSAFE, tbSNET, tbTNB]) => {
+                    let rowsDT = null, rowsUSDT = null, rowsEOS = null, rowsSAFE = null, rowsSNET = null, rowsTNB = null;
+                    if (tbDT && tbDT.rows.length) {
+                        rowsDT = tbDT.rows[0];
+                    }
+                    if (tbUSDT && tbUSDT.rows.length) {
+                        rowsUSDT = tbUSDT.rows[0];
+                    }
+                    if (tbEOS && tbEOS.rows.length) {
+                        rowsEOS = tbEOS.rows[0];
+                    }
+                    if (tbSAFE && tbSAFE.rows.length) {
+                        rowsSAFE = tbSAFE.rows[0];
+                    }
+                    if (tbSNET && tbSNET.rows.length) {
+                        rowsSNET = tbSNET.rows[0];
+                    }
+                    if (tbTNB && tbTNB.rows.length) {
+                        rowsTNB = tbTNB.rows[0];
+                    }
+                    this.cacheSvc.updateDGTbPeriods(rowsDT, rowsUSDT, rowsEOS, rowsSAFE, rowsSNET, rowsTNB);
+
+                    setTimeout(() => {
+                        this.fetchDGTbPeriods();
+                    }, 200);
+                });
+        } catch (err) {
+            this.log.error('catch error when fetch dragonex table periods:', err);
+            setTimeout(() => {
+                this.fetchDGTbPeriods();
+            }, 200);
+        }
+    }
+
     // 检查合约其他表
     // 这里是 pubkey, dealers 表
     fetchTbOthers() {
         try {
-            // pubkey 表
-            // let tbPubkey = rp({
-            //     url: this.getTableUrl,
-            //     method: 'POST',
-            //     json: true,
-            //     body: { code: this.gameContract, scope: this.gameContract, table: 'pubkey', limit: 2, lower_bound: '', json: true, reverse: true },  // reverse: true => 以倒序返回表记录
-            //     timeout: 5000,  // 如果不设置超时，request可能出现一直不返回
-            // })
-            // .then(res => { return res; })
-            // .catch(err => {
-            //     this.log.error('catch error when request table pubkey:', err);
-            //     return null;
-            // });
             // dealers 表
             let tbDealers = rp({
                 url: this.getTableUrl,
@@ -85,18 +172,89 @@ class BullMonitorService {
                 return null;
             });
 
-            Promise
-                .all([tbDealers])
-                .then(([dataDealers]) => {
-                    let rowPubkey = null, rowDealers = null;
+            // 龙网 dealers 表
+            let tbDealersDGDT = rp({
+                url: this.getTableUrl,
+                method: 'POST',
+                json: true,
+                body: { code: this.gameContract, scope: 'DT', table: 'ldealers', limit: 2, lower_bound: '', json: true, reverse: true },  // reverse: true => 以倒序返回表记录
+                timeout: 5000,  // 如果不设置超时，request可能出现一直不返回
+            })
+            .then(res => { return res; })
+            .catch(err => { return null; });
+            let tbDealersDGUSDT = rp({
+                url: this.getTableUrl,
+                method: 'POST',
+                json: true,
+                body: { code: this.gameContract, scope: 'USDT', table: 'ldealers', limit: 2, lower_bound: '', json: true, reverse: true },  // reverse: true => 以倒序返回表记录
+                timeout: 5000,  // 如果不设置超时，request可能出现一直不返回
+            })
+            .then(res => { return res; })
+            .catch(err => { return null; });
+            let tbDealersDGEOS = rp({
+                url: this.getTableUrl,
+                method: 'POST',
+                json: true,
+                body: { code: this.gameContract, scope: 'EOS', table: 'ldealers', limit: 2, lower_bound: '', json: true, reverse: true },  // reverse: true => 以倒序返回表记录
+                timeout: 5000,  // 如果不设置超时，request可能出现一直不返回
+            })
+            .then(res => { return res; })
+            .catch(err => { return null; });
+            let tbDealersDGSAFE = rp({
+                url: this.getTableUrl,
+                method: 'POST',
+                json: true,
+                body: { code: this.gameContract, scope: 'SAFE', table: 'ldealers', limit: 2, lower_bound: '', json: true, reverse: true },  // reverse: true => 以倒序返回表记录
+                timeout: 5000,  // 如果不设置超时，request可能出现一直不返回
+            })
+            .then(res => { return res; })
+            .catch(err => { return null; });
+            let tbDealersDGSNET = rp({
+                url: this.getTableUrl,
+                method: 'POST',
+                json: true,
+                body: { code: this.gameContract, scope: 'SNET', table: 'ldealers', limit: 2, lower_bound: '', json: true, reverse: true },  // reverse: true => 以倒序返回表记录
+                timeout: 5000,  // 如果不设置超时，request可能出现一直不返回
+            })
+            .then(res => { return res; })
+            .catch(err => { return null; });
+            let tbDealersDGTNB = rp({
+                url: this.getTableUrl,
+                method: 'POST',
+                json: true,
+                body: { code: this.gameContract, scope: 'TNB', table: 'ldealers', limit: 2, lower_bound: '', json: true, reverse: true },  // reverse: true => 以倒序返回表记录
+                timeout: 5000,  // 如果不设置超时，request可能出现一直不返回
+            })
+            .then(res => { return res; })
+            .catch(err => { return null; });
 
-                    // if (dataPubkey && dataPubkey.rows.length) {
-                    //     rowPubkey = dataPubkey.rows[0];
-                    // }
+            Promise
+                .all([tbDealers, tbDealersDGDT, tbDealersDGUSDT, tbDealersDGEOS, tbDealersDGSAFE, tbDealersDGSNET, tbDealersDGTNB])
+                .then(([dataDealers, dataDealersDGDT, dataDealersDGUSDT, dataDealersDGEOS, dataDealersDGSAFE, dataDealersDGSNET, dataDealersDGTNB]) => {
+                    let rowDealers = null, rowDealersDGDT = null, rowDealersDGUSDT = null, rowDealersDGEOS = null, rowDealersDGSAFE= null, rowDealersDGSNET = null, rowDealersDGTNB = null;
+
                     if (dataDealers && dataDealers.rows.length) {
                         rowDealers = dataDealers.rows[0];
                     }
-                    this.cacheSvc.updateTbOthers(rowPubkey, rowDealers);
+                    if (dataDealersDGDT && dataDealersDGDT.rows.length) {
+                        rowDealersDGDT = dataDealersDGDT.rows[0];
+                    }
+                    if (dataDealersDGUSDT && dataDealersDGUSDT.rows.length) {
+                        rowDealersDGUSDT = dataDealersDGUSDT.rows[0];
+                    }
+                    if (dataDealersDGEOS && dataDealersDGEOS.rows.length) {
+                        rowDealersDGEOS = dataDealersDGEOS.rows[0];
+                    }
+                    if (dataDealersDGSAFE && dataDealersDGSAFE.rows.length) {
+                        rowDealersDGSAFE = dataDealersDGSAFE.rows[0];
+                    }
+                    if (dataDealersDGSNET && dataDealersDGSNET.rows.length) {
+                        rowDealersDGSNET = dataDealersDGSNET.rows[0];
+                    }
+                    if (dataDealersDGTNB && dataDealersDGTNB.rows.length) {
+                        rowDealersDGTNB = dataDealersDGTNB.rows[0];
+                    }
+                    this.cacheSvc.updateTbOthers(rowDealers, rowDealersDGDT, rowDealersDGUSDT, rowDealersDGEOS, rowDealersDGSAFE, rowDealersDGSNET, rowDealersDGTNB);
 
                     setTimeout(() => {
                         this.fetchTbOthers();
@@ -130,20 +288,27 @@ class BullMonitorService {
                                 if (trace &&
                                     trace.action_trace &&
                                     trace.action_trace.act &&
-                                    (trace.action_trace.act.name === 'result' || trace.action_trace.act.name === 'betinfo') &&
+                                    (trace.action_trace.act.name === 'result' || trace.action_trace.act.name === 'betinfo' ||
+                                     trace.action_trace.act.name === 'lresult' || trace.action_trace.act.name === 'lbetinfo') &&
                                     trace.action_trace.act.account === this.gameContract &&
                                     trace.action_trace.act.data &&
                                     trace.action_trace.receipt &&
                                     trace.action_trace.receipt.receiver === this.gameContract) {
 
-                                    let data = trace.action_trace.act.data
+                                    let data = trace.action_trace.act.data;
 
                                     if (trace.action_trace.act.name === 'betinfo') {       // 实时投注信息
-                                        data.block_time = trace.action_trace.block_time;
+                                        data.block_time = trace.block_time;
                                         await this.cacheSvc.addBet(data);
                                     } else if (trace.action_trace.act.name === 'result') {  // 亮牌结果
-                                        data.res.block_time = trace.action_trace.block_time;
+                                        data.res.block_time = trace.block_time;
                                         await this.cacheSvc.addResult(data.res);
+                                    } else if (trace.action_trace.act.name === 'lbetinfo') {
+                                        data.block_time = trace.block_time;
+                                        await this.cacheSvc.addDGBet(data);
+                                    } else if (trace.action_trace.act.name === 'lresult') {
+                                        data.res.block_time = trace.block_time;
+                                        await this.cacheSvc.addDGResult(data.res);
                                     }
                                 }
                             }

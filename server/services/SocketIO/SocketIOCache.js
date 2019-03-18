@@ -268,8 +268,10 @@ class SocketIOCache {
             let key = '';
             if (cmdJson.type === 'MyDealer') {
                 key = `bull:dealer:${cmdJson.dealer}`;
+                ret.dealer = cmdJson.dealer;
             } else if (cmdJson.type === 'DealersIncome') {
                 key = 'bull:dealer:all2';
+                ret.currency = Math.floor((Date.now() / 1000 + 8 * 3600) / 86400);
             }
 
             let newest = await this.redis.client.zrevrangebyscore(key, this.redisRecsMax, 0, 'LIMIT', 0, 1);
@@ -325,6 +327,252 @@ class SocketIOCache {
         return ret;
     }
     // ******************************* 牛牛 End   ****************************
+
+    // ******************************* DragonEX Start ****************************
+    async getDGDTBullInfo() {
+        let ret = null;
+        try {
+            let tbPeriods = await this.redis.client.get('dg:bull:tb:periods:dt');
+            let tbDealers = await this.redis.client.get('dg:bull:tb:dealers:dt');
+
+            if (tbPeriods && tbDealers) {
+                ret = JSON.parse(tbPeriods);
+                let tbDealersJson = JSON.parse(tbDealers);
+                ret.curdealers = tbDealersJson.dealers;
+                ret.ondealerswait = tbDealersJson.ondealerswait;
+                ret.offdealerswait = tbDealersJson.offdealerswait;
+            }
+        } catch (err) {
+            this.log.error('catch error when get dragonex dt bull table periods:', err);
+        }
+        return ret;
+    }
+    async getDGUSDTBullInfo() {
+        let ret = null;
+        try {
+            let tbPeriods = await this.redis.client.get('dg:bull:tb:periods:usdt');
+            let tbDealers = await this.redis.client.get('dg:bull:tb:dealers:usdt');
+
+            if (tbPeriods && tbDealers) {
+                ret = JSON.parse(tbPeriods);
+                let tbDealersJson = JSON.parse(tbDealers);
+                ret.curdealers = tbDealersJson.dealers;
+                ret.ondealerswait = tbDealersJson.ondealerswait;
+                ret.offdealerswait = tbDealersJson.offdealerswait;
+            }
+        } catch (err) {
+            this.log.error('catch error when get dragonex usdt bull table periods:', err);
+        }
+        return ret;
+    }
+    async getDGEOSBullInfo() {
+        let ret = null;
+        try {
+            let tbPeriods = await this.redis.client.get('dg:bull:tb:periods:eos');
+            let tbDealers = await this.redis.client.get('dg:bull:tb:dealers:eos');
+
+            if (tbPeriods && tbDealers) {
+                ret = JSON.parse(tbPeriods);
+                let tbDealersJson = JSON.parse(tbDealers);
+                ret.curdealers = tbDealersJson.dealers;
+                ret.ondealerswait = tbDealersJson.ondealerswait;
+                ret.offdealerswait = tbDealersJson.offdealerswait;
+            }
+        } catch (err) {
+            this.log.error('catch error when get dragonex eos bull table periods:', err);
+        }
+        return ret;
+    }
+    async getDGSAFEBullInfo() {
+        let ret = null;
+        try {
+            let tbPeriods = await this.redis.client.get('dg:bull:tb:periods:safe');
+            let tbDealers = await this.redis.client.get('dg:bull:tb:dealers:safe');
+
+            if (tbPeriods && tbDealers) {
+                ret = JSON.parse(tbPeriods);
+                let tbDealersJson = JSON.parse(tbDealers);
+                ret.curdealers = tbDealersJson.dealers;
+                ret.ondealerswait = tbDealersJson.ondealerswait;
+                ret.offdealerswait = tbDealersJson.offdealerswait;
+            }
+        } catch (err) {
+            this.log.error('catch error when get dragonex safe bull table periods:', err);
+        }
+        return ret;
+    }
+    async getDGSNETBullInfo() {
+        let ret = null;
+        try {
+            let tbPeriods = await this.redis.client.get('dg:bull:tb:periods:snet');
+            let tbDealers = await this.redis.client.get('dg:bull:tb:dealers:snet');
+
+            if (tbPeriods && tbDealers) {
+                ret = JSON.parse(tbPeriods);
+                let tbDealersJson = JSON.parse(tbDealers);
+                ret.curdealers = tbDealersJson.dealers;
+                ret.ondealerswait = tbDealersJson.ondealerswait;
+                ret.offdealerswait = tbDealersJson.offdealerswait;
+            }
+        } catch (err) {
+            this.log.error('catch error when get dragonex snet bull table periods:', err);
+        }
+        return ret;
+    }
+    async getDGTNBBullInfo() {
+        let ret = null;
+        try {
+            let tbPeriods = await this.redis.client.get('dg:bull:tb:periods:tnb');
+            let tbDealers = await this.redis.client.get('dg:bull:tb:dealers:tnb');
+
+            if (tbPeriods && tbDealers) {
+                ret = JSON.parse(tbPeriods);
+                let tbDealersJson = JSON.parse(tbDealers);
+                ret.curdealers = tbDealersJson.dealers;
+                ret.ondealerswait = tbDealersJson.ondealerswait;
+                ret.offdealerswait = tbDealersJson.offdealerswait;
+            }
+        } catch (err) {
+            this.log.error('catch error when get dragonex tnb bull table periods:', err);
+        }
+        return ret;
+    }
+    // 获取最近5局的牌型（和主网EOS牌型一样）
+    // 投注记录（所有投注记录/某个玩家投注记录）
+    async getDGBullBetRecords(account) {
+        let ret = {
+            type: account,
+            data: [],
+        };
+        try {
+            if (account) {
+                let key = `dg:bull:bet:records:${account}`;
+                ret.data = await this.redis.client.zrevrange(key, 0, 19);  // 返回最新 20 条记录
+            }
+        } catch (err) {
+            this.log.error('catch error when get dragonex bull bets:', err);
+        }
+        return ret;
+    }
+    // 当前庄家/预约上庄
+    async getDGBullCurAndWaitingDealers(cmdJson) {
+        if (cmdJson && cmdJson.token && typeof cmdJson.token === 'string') {
+            cmdJson.token = cmdJson.token.toLowerCase();
+        }
+        let ret = {
+            type: cmdJson.type,
+            token: cmdJson.token,
+            data: [],
+        };
+
+        try {
+            let key = `dg:bull:tb:dealers:${cmdJson.token}`;
+            let dataStr = await this.redis.client.get(key);
+            if (dataStr) {
+                let dataJson = JSON.parse(dataStr);
+
+                switch (cmdJson.type) {
+                    case 'CurrentDealers': {  // 当前庄家
+                        ret.data = dataJson.dealers;
+                        break;
+                    }
+                    case 'DealersWaiting': {  // 预约上庄
+                        ret.data = dataJson.ondealerswait;
+                        break;
+                    }
+                }
+            }
+        } catch (err) {
+            this.log.error('catch error when get dragonex bull dealer list:', err);
+        }
+        return ret;
+    }
+    // 我的庄家/庄家收益
+    async getDGBullMyAndAllDealerIncome(cmdJson) {
+        if (cmdJson && cmdJson.token && typeof cmdJson.token === 'string') {
+            cmdJson.token = cmdJson.token.toLowerCase();
+        }
+        let ret = {
+            data: [],
+            after: -1,
+            before: -1,
+            currency: -1,
+            type: cmdJson.type,
+            token: cmdJson.token,
+        };
+
+        try {
+            let key = '';
+            if (cmdJson.type === 'MyDealer') {
+                ret.dealer = cmdJson.dealer;
+                key = `dg:bull:dealer:${cmdJson.token}:${cmdJson.dealer}`;
+            } else if (cmdJson.type === 'DealersIncome') {
+                key = `dg:bull:dealer:${cmdJson.token}:all2`;
+                ret.currency = Math.floor((Date.now() / 1000 + 8 * 3600) / 86400);
+            }
+
+            let newest = await this.redis.client.zrevrangebyscore(key, this.redisRecsMax, 0, 'LIMIT', 0, 1);
+            if (newest.length) {
+                let newestJson = JSON.parse(newest[0]);
+
+                if (cmdJson.start > 0) {
+                    let req = await this.redis.client.zrevrangebyscore(key, cmdJson.start, cmdJson.start, 'LIMIT', 0, 1500);
+                    if (req.length) {
+                        ret.data = req;
+                        ret.currency = cmdJson.start;
+
+                        let after  = await this.redis.client.zrangebyscore(key, cmdJson.start + 1, this.redisRecsMax, 'LIMIT', 0, 1);
+                        let before = await this.redis.client.zrevrangebyscore(key, cmdJson.start - 1, 0,                 'LIMIT', 0, 1);
+
+                        if (after.length) {
+                            ret.after = JSON.parse(after[0]).score;
+                        }
+                        if (before.length) {
+                            ret.before = JSON.parse(before[0]).score;
+                        }
+                    }
+                } else {
+                    if (newestJson.score > 0) {
+                        let before = await this.redis.client.zrevrangebyscore(key, newestJson.score - 1, 0, 'LIMIT', 0, 1);
+                        if (before.length) {
+                            ret.before = JSON.parse(before[0]).score;
+                        }
+                    }
+                    let req = await this.redis.client.zrevrangebyscore(key, newestJson.score, newestJson.score, 'LIMIT', 0, 1500);
+                    ret.data = req;
+                    ret.currency = newestJson.score;
+                }
+            }
+        } catch (err) {
+            this.log.error('catch error when get dragonex bull my and all dealer income:', err);
+        }
+        return ret;
+    }
+
+    async getPlayRes(params) {
+        try {
+            let ret = { act_status: 'wait', };
+            if (typeof params === 'string') {
+                let paramsJson = JSON.parse(params);
+                if (paramsJson.trade_no) {
+                    let key = `dg:play:result:${paramsJson.trade_no}`;
+                    ret = this.redis.client.get(key);
+                } else {
+                    ret.msg = 'trade_no not found in params';
+                }
+            } else {
+                ret.msg = 'params should be string by use JSON.stringify';
+            }
+
+            if (ret === null) {
+                ret = { act_status: 'wait', }
+            }
+            return JSON.stringify(ret);
+        } catch (err) {
+            this.log.error('catch error when get bull play result:', err);
+        }
+    }
+    // ******************************* DragonEX End   ****************************
 }
 
 module.exports = SocketIOCache;
