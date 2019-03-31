@@ -192,7 +192,7 @@ class SocketIOService {
             });
             // ******************************* 牛牛 End   ****************************
 
-            // ******************************* DragonEX Start ****************************
+            // ******************************* Pro Start ****************************
             // 进入牛牛游戏
             socket.on('openDGDTBull', async (p) => {
                 let data = await this.cacheSvc.getDGDTBullInfo();
@@ -230,32 +230,38 @@ class SocketIOService {
                     socket.emit('welcomeDGTNBBull', JSON.stringify(data));
                 }
             });
+            socket.on('openHOOSATBull', async (p) => {
+                let data = await this.cacheSvc.getHOOSATBullInfo();
+                if (data && socket.connected) {
+                    socket.emit('welcomeHOOSATBull', JSON.stringify(data));
+                }
+            });
             // 最近5局牌型记录（和主网EOS牌型一样）
             // 投注记录
-            socket.on('getDGBullBetRecords', async (account) => {
-                let data = await this.cacheSvc.getDGBullBetRecords(account);
+            socket.on('getProBullBetRecords', async (account) => {
+                let data = await this.cacheSvc.getProBullBetRecords(account);
                 if (data && socket.connected) {
-                    socket.emit('onDGBullBetRecords', JSON.stringify(data));
+                    socket.emit('onProBullBetRecords', JSON.stringify(data));
                 }
             });
             // 上庄弹窗
-            socket.on('DGBullDealerCmd', async (cmdStr) => {
+            socket.on('ProBullDealerCmd', async (cmdStr) => {
                 let data = null, cmdJson = JSON.parse(cmdStr);
                 if (cmdJson === null) { return; }
                 switch (cmdJson.type) {
                     case 'CurrentDealers':    // 当前庄家
                     case 'DealersWaiting': {  // 预约上庄
-                        data = await this.cacheSvc.getDGBullCurAndWaitingDealers(cmdJson);
+                        data = await this.cacheSvc.getProBullCurAndWaitingDealers(cmdJson);
                         break;
                     }
                     case 'DealersIncome':     // 庄家收益
                     case 'MyDealer': {        // 我的庄家
-                        data = await this.cacheSvc.getDGBullMyAndAllDealerIncome(cmdJson);
+                        data = await this.cacheSvc.getProBullMyAndAllDealerIncome(cmdJson);
                         break;
                     }
                 }
                 if (data && socket.connected) {
-                    socket.emit('onDGBullDealerCmd', JSON.stringify(data));
+                    socket.emit('onProBullDealerCmd', JSON.stringify(data));
                 }
             });
             // 获取支付后结果
@@ -265,7 +271,7 @@ class SocketIOService {
                     socket.emit('onDGPlaybull', data);
                 }
             });
-            // ******************************* DragonEX End   ****************************
+            // ******************************* Pro End   ****************************
 
             // this.minertop( socket );
 
@@ -301,11 +307,11 @@ class SocketIOService {
 
         this.redis.sub.subscribe('NewBet', 'NewCashBet', 'NewChat', 'NewTopnRes', 'NewChatResult', 'NewestTopnRes',
                                  'BullResult', 'NewBullBet', 'BullGameStop', 'BullGameStart', 'BullDealersChange',
-                                  // DragonEX
-                                 'DGPlayBull', 'DGBullResult', 'DGNewBullBet',
+                                  // Pro
+                                 'DGPlayBull', 'ProBullResult', 'ProNewBullBet',
                                  'DGDTBullGameStop', 'DGDTBullGameStart', 'DGUSDTBullGameStop', 'DGUSDTBullGameStart', 'DGEOSBullGameStop', 'DGEOSBullGameStart',
-                                 'DGSAFEBullGameStop', 'DGSAFEBullGameStart', 'DGSNETBullGameStop', 'DGSNETBullGameStart', 'DGTNBBullGameStop', 'DGTNBBullGameStart',
-                                 'DGDTBullDealersChange', 'DGUSDTBullDealersChange', 'DGEOSBullDealersChange', 'DGSAFEBullDealersChange', 'DGSNETBullDealersChange', 'DGTNBBullDealersChange',
+                                 'DGSAFEBullGameStop', 'DGSAFEBullGameStart', 'DGSNETBullGameStop', 'DGSNETBullGameStart', 'DGTNBBullGameStop', 'DGTNBBullGameStart', 'HOOSATBullGameStop', 'HOOSATBullGameStart',
+                                 'DGDTBullDealersChange', 'DGUSDTBullDealersChange', 'DGEOSBullDealersChange', 'DGSAFEBullDealersChange', 'DGSNETBullDealersChange', 'DGTNBBullDealersChange', 'HOOSATBullDealersChange',
                                  (err, count) => {  // 需要订阅的频道在这里添加
             if (err) {
                 this.log.error('redis subscribe: ', err);
@@ -362,40 +368,46 @@ class SocketIOService {
                         break;
                     }
                     // ******************************* 牛牛 End   ****************************
-                    // ******************************* DragonEX Start ****************************
-                    case 'DGBullResult':
-                    case 'DGNewBullBet':
-                    // DT
+                    // ******************************* Pro Start ****************************
+                    case 'ProBullResult':
+                    case 'ProNewBullBet':
+                    // DG DT
                     case 'DGDTBullGameStop':
                     case 'DGDTBullGameStart':
-                    // USDT
+                    // DG USDT
                     case 'DGUSDTBullGameStop':
                     case 'DGUSDTBullGameStart':
-                    // EOS
+                    // DG EOS
                     case 'DGEOSBullGameStop':
                     case 'DGEOSBullGameStart':
-                    // SAFE
+                    // DG SAFE
                     case 'DGSAFEBullGameStop':
                     case 'DGSAFEBullGameStart':
-                    // SNET
+                    // DG SNET
                     case 'DGSNETBullGameStop':
                     case 'DGSNETBullGameStart':
-                    // TNB
+                    // DG TNB
                     case 'DGTNBBullGameStop':
-                    case 'DGTNBBullGameStart': {
+                    case 'DGTNBBullGameStart':
+                    // HOO SAT
+                    case 'HOOSATBullGameStop':
+                    case 'HOOSATBullGameStart': {
                         let stepInfo = {
                             step: channel,
                             info: message
                         }
-                        this.handleIO.emit('DGBullStep', JSON.stringify(stepInfo));
+                        this.handleIO.emit('ProBullStep', JSON.stringify(stepInfo));
                         break;
                     }
+                    // DG
                     case 'DGDTBullDealersChange':
                     case 'DGUSDTBullDealersChange':
                     case 'DGEOSBullDealersChange':
                     case 'DGSAFEBullDealersChange':
                     case 'DGSNETBullDealersChange':
-                    case 'DGTNBBullDealersChange': {
+                    case 'DGTNBBullDealersChange':
+                    // HOO
+                    case 'HOOSATBullDealersChange': {
                         let event = `on${channel}`;
                         this.handleIO.emit(event, message);
                         break;
@@ -403,7 +415,7 @@ class SocketIOService {
                     case 'DGPlayBull': {
                         this.handleIO.emit('onDGPlaybull', message);
                     }
-                    // ******************************* DragonEX Start ****************************
+                    // ******************************* Pro Start ****************************
                     default: {
                         this.log.info(`invalid channel: ${channel} !`);
                     }

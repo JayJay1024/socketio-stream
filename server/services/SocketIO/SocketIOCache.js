@@ -328,12 +328,12 @@ class SocketIOCache {
     }
     // ******************************* 牛牛 End   ****************************
 
-    // ******************************* DragonEX Start ****************************
+    // ******************************* Pro Start ****************************
     async getDGDTBullInfo() {
         let ret = null;
         try {
-            let tbPeriods = await this.redis.client.get('dg:bull:tb:periods:dt');
-            let tbDealers = await this.redis.client.get('dg:bull:tb:dealers:dt');
+            let tbPeriods = await this.redis.client.get('pro:bull:tb:periods:dt');
+            let tbDealers = await this.redis.client.get('pro:bull:tb:dealers:dt');
 
             if (tbPeriods && tbDealers) {
                 ret = JSON.parse(tbPeriods);
@@ -350,8 +350,8 @@ class SocketIOCache {
     async getDGUSDTBullInfo() {
         let ret = null;
         try {
-            let tbPeriods = await this.redis.client.get('dg:bull:tb:periods:usdt');
-            let tbDealers = await this.redis.client.get('dg:bull:tb:dealers:usdt');
+            let tbPeriods = await this.redis.client.get('pro:bull:tb:periods:usdt');
+            let tbDealers = await this.redis.client.get('pro:bull:tb:dealers:usdt');
 
             if (tbPeriods && tbDealers) {
                 ret = JSON.parse(tbPeriods);
@@ -368,8 +368,8 @@ class SocketIOCache {
     async getDGEOSBullInfo() {
         let ret = null;
         try {
-            let tbPeriods = await this.redis.client.get('dg:bull:tb:periods:eos');
-            let tbDealers = await this.redis.client.get('dg:bull:tb:dealers:eos');
+            let tbPeriods = await this.redis.client.get('pro:bull:tb:periods:eos');
+            let tbDealers = await this.redis.client.get('pro:bull:tb:dealers:eos');
 
             if (tbPeriods && tbDealers) {
                 ret = JSON.parse(tbPeriods);
@@ -386,8 +386,8 @@ class SocketIOCache {
     async getDGSAFEBullInfo() {
         let ret = null;
         try {
-            let tbPeriods = await this.redis.client.get('dg:bull:tb:periods:safe');
-            let tbDealers = await this.redis.client.get('dg:bull:tb:dealers:safe');
+            let tbPeriods = await this.redis.client.get('pro:bull:tb:periods:safe');
+            let tbDealers = await this.redis.client.get('pro:bull:tb:dealers:safe');
 
             if (tbPeriods && tbDealers) {
                 ret = JSON.parse(tbPeriods);
@@ -404,8 +404,8 @@ class SocketIOCache {
     async getDGSNETBullInfo() {
         let ret = null;
         try {
-            let tbPeriods = await this.redis.client.get('dg:bull:tb:periods:snet');
-            let tbDealers = await this.redis.client.get('dg:bull:tb:dealers:snet');
+            let tbPeriods = await this.redis.client.get('pro:bull:tb:periods:snet');
+            let tbDealers = await this.redis.client.get('pro:bull:tb:dealers:snet');
 
             if (tbPeriods && tbDealers) {
                 ret = JSON.parse(tbPeriods);
@@ -422,8 +422,8 @@ class SocketIOCache {
     async getDGTNBBullInfo() {
         let ret = null;
         try {
-            let tbPeriods = await this.redis.client.get('dg:bull:tb:periods:tnb');
-            let tbDealers = await this.redis.client.get('dg:bull:tb:dealers:tnb');
+            let tbPeriods = await this.redis.client.get('pro:bull:tb:periods:tnb');
+            let tbDealers = await this.redis.client.get('pro:bull:tb:dealers:tnb');
 
             if (tbPeriods && tbDealers) {
                 ret = JSON.parse(tbPeriods);
@@ -437,16 +437,34 @@ class SocketIOCache {
         }
         return ret;
     }
+    async getHOOSATBullInfo() {
+        let ret = null;
+        try {
+            let tbPeriods = await this.redis.client.get('pro:bull:tb:periods:sat');
+            let tbDealers = await this.redis.client.get('pro:bull:tb:dealers:sat');
+
+            if (tbPeriods && tbDealers) {
+                ret = JSON.parse(tbPeriods);
+                let tbDealersJson = JSON.parse(tbDealers);
+                ret.curdealers = tbDealersJson.dealers;
+                ret.ondealerswait = tbDealersJson.ondealerswait;
+                ret.offdealerswait = tbDealersJson.offdealerswait;
+            }
+        } catch (err) {
+            this.log.error('catch error when get hoo sat bull table periods:', err);
+        }
+        return ret;
+    }
     // 获取最近5局的牌型（和主网EOS牌型一样）
     // 投注记录（所有投注记录/某个玩家投注记录）
-    async getDGBullBetRecords(account) {
+    async getProBullBetRecords(account) {
         let ret = {
             type: account,
             data: [],
         };
         try {
             if (account) {
-                let key = `dg:bull:bet:records:${account}`;
+                let key = `pro:bull:bet:records:${account}`;
                 ret.data = await this.redis.client.zrevrange(key, 0, 19);  // 返回最新 20 条记录
             }
         } catch (err) {
@@ -455,7 +473,7 @@ class SocketIOCache {
         return ret;
     }
     // 当前庄家/预约上庄
-    async getDGBullCurAndWaitingDealers(cmdJson) {
+    async getProBullCurAndWaitingDealers(cmdJson) {
         if (cmdJson && cmdJson.token && typeof cmdJson.token === 'string') {
             cmdJson.token = cmdJson.token.toLowerCase();
         }
@@ -466,7 +484,7 @@ class SocketIOCache {
         };
 
         try {
-            let key = `dg:bull:tb:dealers:${cmdJson.token}`;
+            let key = `pro:bull:tb:dealers:${cmdJson.token}`;
             let dataStr = await this.redis.client.get(key);
             if (dataStr) {
                 let dataJson = JSON.parse(dataStr);
@@ -488,7 +506,7 @@ class SocketIOCache {
         return ret;
     }
     // 我的庄家/庄家收益
-    async getDGBullMyAndAllDealerIncome(cmdJson) {
+    async getProBullMyAndAllDealerIncome(cmdJson) {
         if (cmdJson && cmdJson.token && typeof cmdJson.token === 'string') {
             cmdJson.token = cmdJson.token.toLowerCase();
         }
@@ -505,9 +523,9 @@ class SocketIOCache {
             let key = '';
             if (cmdJson.type === 'MyDealer') {
                 ret.dealer = cmdJson.dealer;
-                key = `dg:bull:dealer:${cmdJson.token}:${cmdJson.dealer}`;
+                key = `pro:bull:dealer:${cmdJson.token}:${cmdJson.dealer}`;
             } else if (cmdJson.type === 'DealersIncome') {
-                key = `dg:bull:dealer:${cmdJson.token}:all2`;
+                key = `pro:bull:dealer:${cmdJson.token}:all2`;
                 ret.currency = Math.floor((Date.now() / 1000 + 8 * 3600) / 86400);
             }
 
@@ -572,7 +590,7 @@ class SocketIOCache {
             this.log.error('catch error when get bull play result:', err);
         }
     }
-    // ******************************* DragonEX End   ****************************
+    // ******************************* Pro End   ****************************
 }
 
 module.exports = SocketIOCache;

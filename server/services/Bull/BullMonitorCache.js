@@ -15,35 +15,45 @@ class BullMonitorCache {
         this.isDGSAFEGameStarted = false;
         this.isDGSNETGameStarted = false;
         this.isDGTNBGameStarted  = false;
+        this.isHOOSATGameStarted = false;
 
         this.lastRound   = -1;  // 上一期
-        this.lastDGRound = {
+        this.lastProRound = {
+            // dragonex
             dt:   -1,
             usdt: -1,
             eos:  -1,
             safe: -1,
             snet: -1,
             tnb:  -1,
+            // hoo wallet
+            sat:  -1,
         };
 
-        this.thisRoundDealersPayin   = 0;   // 这一期所有庄家的总投入
-        this.thisDGRoundDealersPayin = {
+        this.thisRoundDealersPayin    = 0;   // 这一期所有庄家的总投入
+        this.thisProRoundDealersPayin = {
+            // dragonex
             dt:   0,
             usdt: 0,
             eos:  0,
             safe: 0,
             snet: 0,
             tnb:  0,
+            // hoo wallet
+            sat:  0,
         }
 
-        this.thisRoundDealersPayout   = 0;   // 这一期所有庄家的总支出
-        this.thisDGRoundDealersPayout = {
+        this.thisRoundDealersPayout    = 0;   // 这一期所有庄家的总支出
+        this.thisProRoundDealersPayout = {
+            // dragonex
             dt:   0,
             usdt: 0,
             eos:  0,
             safe: 0,
             snet: 0,
             tnb:  0,
+            // hoo wallet
+            sat:  0,
         }
     }
 
@@ -82,11 +92,11 @@ class BullMonitorCache {
         }
     }
 
-    // 龙网实时投注信息
-    async addDGBet(data) {
+    // 实时投注信息
+    async addProBet(data) {
         try {
             let dataStr = JSON.stringify(data), retry = 25;
-            let score = data.id, key = `dg:bull:bet:realtime`;
+            let score = data.id, key = `pro:bull:bet:realtime`;
 
             while (retry--) {
                 // 重复的记录不添加
@@ -95,7 +105,7 @@ class BullMonitorCache {
                     this.redis.client.unwatch();
                     return false;
                 }
-                this.redis.pub.publish('DGNewBullBet', JSON.stringify(data.vb));
+                this.redis.pub.publish('ProNewBullBet', JSON.stringify(data.vb));
 
                 // 保留最新的 1024 条记录
                 let count = await this.redis.client.zcount(key, 0, '+inf');
@@ -109,10 +119,10 @@ class BullMonitorCache {
                 }
             }
 
-            this.log.info('dragonex realtime bet data not save, data:', data);
+            this.log.info('pro realtime bet data not save, data:', data);
             return false;
         } catch (err) {
-            this.log.error('catch error when add dragonex realtime bet:', err);
+            this.log.error('catch error when add pro realtime bet:', err);
             return false;
         }
     }
@@ -438,15 +448,15 @@ class BullMonitorCache {
         }
     }
 
-    // 龙网亮牌结果
-    async addDGResult(data) {
+    // 亮牌结果
+    async addProResult(data) {
         if (data.round < 15) { return; }
-        await this.addDGResultByBet(data);
-        await this.addDGResultByDealer(data);
+        await this.addProResultByBet(data);
+        await this.addProResultByDealer(data);
 
         try {
             let dataStr = JSON.stringify(data);
-            let key = 'dg:bull:results', score = data.id, retry = 25;
+            let key = 'pro:bull:results', score = data.id, retry = 25;
 
             while (retry--) {
                 this.redis.client.watch(key);
@@ -454,7 +464,7 @@ class BullMonitorCache {
                     this.redis.client.unwatch();
                     return true;
                 }
-                this.redis.pub.publish('DGBullResult', dataStr);
+                this.redis.pub.publish('ProBullResult', dataStr);
 
                 // 保留最新 1024 条记录
                 let count = await this.redis.client.zcount(key, 0, '+inf');
@@ -468,25 +478,25 @@ class BullMonitorCache {
                 }
             }
             if (retry <= 0) {
-                this.log.info('add dragonex result data not save, data:', data);
+                this.log.info('add pro result data not save, data:', data);
             }
             return false;
         } catch (err) {
-            this.log.error('catch error when add dragonex result:', err);
+            this.log.error('catch error when add pro result:', err);
             return false;
         }
     }
 
-    // 龙网亮牌结果
+    // 亮牌结果
     // 按不同玩家分开保存，以及按所有保存
-    async addDGResultByBet(data) {
+    async addProResultByBet(data) {
         try {
             let tmpData = Object.assign({}, data);
             delete tmpData.bets;
             for (let bet of data.bets) {
                 tmpData.bet = bet;
                 let score = bet.id, dataStr = JSON.stringify(tmpData), retry = 25;
-                let keyAll = 'dg:bull:bet:records:all', keyPlayer = `dg:bull:bet:records:${bet.player}`;
+                let keyAll = 'pro:bull:bet:records:all', keyPlayer = `pro:bull:bet:records:${bet.player}`;
 
                 while (retry--) {
                     this.redis.client.watch(keyAll, keyPlayer);
@@ -516,27 +526,30 @@ class BullMonitorCache {
                     }
                 }
                 if (retry <= 0) {
-                    this.log.info('add dragonex result data by bet not save:', dataStr);
+                    this.log.info('add pro result data by bet not save:', dataStr);
                 }
             }
         } catch (err) {
-            this.log.error('catch error when add dragonex result by bet:', err);
+            this.log.error('catch error when add pro result by bet:', err);
             return false;
         }
     }
 
-    // 龙网亮牌结果
+    // 亮牌结果
     // 按不同庄家分开保存，以及按所有保存
-    async addDGResultByDealer(data) {
+    async addProResultByDealer(data) {
         try {
             let symbol = data.sym.split(',')[1].toLowerCase();
             switch (symbol) {
+                // dragonex
                 case 'dt':
                 case 'usdt':
                 case 'eos':
                 case 'safe':
                 case 'snet':
-                case 'tnb': {
+                case 'tnb':
+                // hoo wallet
+                case 'sat': {
                     break;
                 }
                 default: {
@@ -545,20 +558,20 @@ class BullMonitorCache {
                 }
             }
 
-            if (this.lastDGRound[symbol] < 0) { this.lastDGRound[symbol] = data.round; }
+            if (this.lastProRound[symbol] < 0) { this.lastProRound[symbol] = data.round; }
 
-            if (data.round !== this.lastDGRound[symbol] && this.thisDGRoundDealersPayin[symbol] && this.thisDGRoundDealersPayout[symbol]) {  // 新的一期
-                let lastRd = this.lastDGRound[symbol];
-                let dealersPayin  = Math.floor(this.thisDGRoundDealersPayin[symbol]);
-                let dealersPayout = Math.floor(this.thisDGRoundDealersPayout[symbol]);
+            if (data.round !== this.lastProRound[symbol] && this.thisProRoundDealersPayin[symbol] && this.thisProRoundDealersPayout[symbol]) {  // 新的一期
+                let lastRd = this.lastProRound[symbol];
+                let dealersPayin  = Math.floor(this.thisProRoundDealersPayin[symbol]);
+                let dealersPayout = Math.floor(this.thisProRoundDealersPayout[symbol]);
 
-                this.lastDGRound[symbol] = data.round;
-                this.thisDGRoundDealersPayin[symbol] = 0;
-                this.thisDGRoundDealersPayout[symbol] = 0;
+                this.lastProRound[symbol] = data.round;
+                this.thisProRoundDealersPayin[symbol] = 0;
+                this.thisProRoundDealersPayout[symbol] = 0;
 
                 // 所有庄家上一期
-                let keySym = `dg:bull:dealer:${symbol}:all2`;
-                let key = 'dg:bull:dealer:all2', score = Math.floor(((new Date(data.block_time)).getTime() / 1000 + 8 * 3600) / 86400);  // score 为这一天
+                let keySym = `pro:bull:dealer:${symbol}:all2`;
+                let key = 'pro:bull:dealer:all2', score = Math.floor(((new Date(data.block_time)).getTime() / 1000 + 8 * 3600) / 86400);  // score 为这一天
                 let dataStr = JSON.stringify({
                     score: score,
                     time: score,
@@ -596,22 +609,22 @@ class BullMonitorCache {
                     }
                 }
                 if (retry <= 0) {
-                    this.log.info('add dragonex result data by all dealer not save:', data);
+                    this.log.info('add pro result data by all dealer not save:', data);
                 }
             }
 
             for (let dealer of data.dealers) {
-                if (data.period === 0 && this.thisDGRoundDealersPayout[symbol] === 0) {   // 本期第一局
-                    this.thisDGRoundDealersPayin[symbol]  = this.thisDGRoundDealersPayin[symbol]  + Math.floor(dealer.balance_begin.split(' ')[0] * 10000);
+                if (data.period === 0 && this.thisProRoundDealersPayout[symbol] === 0) {   // 本期第一局
+                    this.thisProRoundDealersPayin[symbol]  = this.thisProRoundDealersPayin[symbol]  + Math.floor(dealer.balance_begin.split(' ')[0] * 10000);
                 }
                 let maxPeriod = Math.floor(data.id / data.round);
-                if (data.period === maxPeriod - 1 && this.thisDGRoundDealersPayin[symbol] !== 0) {  // 本期最后一局
-                    this.thisDGRoundDealersPayout[symbol] = this.thisDGRoundDealersPayout[symbol] + Math.floor(dealer.balance_end.split(' ')[0]   * 10000);
+                if (data.period === maxPeriod - 1 && this.thisProRoundDealersPayin[symbol] !== 0) {  // 本期最后一局
+                    this.thisProRoundDealersPayout[symbol] = this.thisProRoundDealersPayout[symbol] + Math.floor(dealer.balance_end.split(' ')[0]   * 10000);
                 }
 
                 // 某个庄家这一局
-                let keySym = `dg:bull:dealer:${symbol}:${dealer.dealer}`;
-                let key = `dg:bull:dealer:${dealer.dealer}`, score = data.round;  // score 为这一期
+                let keySym = `pro:bull:dealer:${symbol}:${dealer.dealer}`;
+                let key = `pro:bull:dealer:${dealer.dealer}`, score = data.round;  // score 为这一期
                 let dataStr = JSON.stringify({
                     score: score,
                     time: data.block_time,
@@ -650,11 +663,11 @@ class BullMonitorCache {
                     }
                 }
                 if (retry <= 0) {
-                    this.log.info('add dragonex result data by one dealer not save:', data);
+                    this.log.info('add pro result data by one dealer not save:', data);
                 }
             }
         } catch (err) {
-            this.log.error('catch error when add dragonex result by dealer:', err);
+            this.log.error('catch error when add pro result by dealer:', err);
             return false;
         }
     }
@@ -681,12 +694,13 @@ class BullMonitorCache {
         }
     }
 
-    // 更新合约龙网 periods 表
-    async updateDGTbPeriods(rowsDT, rowsUSDT, rowsEOS, rowsSAFE, rowsSNET, rowsTNB) {
+    // 更新合约 lperiods 表
+    async updateTbLPeriods(rowsDT, rowsUSDT, rowsEOS, rowsSAFE, rowsSNET, rowsTNB, rowsSAT) {
         try {
+            // dragonex
             if (rowsDT) {
                 let data = rowsDT;
-                let key = 'dg:bull:tb:periods:dt', dataStr = JSON.stringify(data);
+                let key = 'pro:bull:tb:periods:dt', dataStr = JSON.stringify(data);
                 let now = Date.now() / 1000, gameStart = data.begintime, gameEnd = data.endtime;
 
                 // 判断开始投注、停止投注
@@ -702,7 +716,7 @@ class BullMonitorCache {
             }
             if (rowsUSDT) {
                 let data = rowsUSDT;
-                let key = 'dg:bull:tb:periods:usdt', dataStr = JSON.stringify(data);
+                let key = 'pro:bull:tb:periods:usdt', dataStr = JSON.stringify(data);
                 let now = Date.now() / 1000, gameStart = data.begintime, gameEnd = data.endtime;
 
                 // 判断开始投注、停止投注
@@ -718,7 +732,7 @@ class BullMonitorCache {
             }
             if (rowsEOS) {
                 let data = rowsEOS;
-                let key = 'dg:bull:tb:periods:eos', dataStr = JSON.stringify(data);
+                let key = 'pro:bull:tb:periods:eos', dataStr = JSON.stringify(data);
                 let now = Date.now() / 1000, gameStart = data.begintime, gameEnd = data.endtime;
 
                 // 判断开始投注、停止投注
@@ -734,7 +748,7 @@ class BullMonitorCache {
             }
             if (rowsSAFE) {
                 let data = rowsSAFE;
-                let key = 'dg:bull:tb:periods:safe', dataStr = JSON.stringify(data);
+                let key = 'pro:bull:tb:periods:safe', dataStr = JSON.stringify(data);
                 let now = Date.now() / 1000, gameStart = data.begintime, gameEnd = data.endtime;
 
                 // 判断开始投注、停止投注
@@ -750,7 +764,7 @@ class BullMonitorCache {
             }
             if (rowsSNET) {
                 let data = rowsSNET;
-                let key = 'dg:bull:tb:periods:snet', dataStr = JSON.stringify(data);
+                let key = 'pro:bull:tb:periods:snet', dataStr = JSON.stringify(data);
                 let now = Date.now() / 1000, gameStart = data.begintime, gameEnd = data.endtime;
 
                 // 判断开始投注、停止投注
@@ -766,7 +780,7 @@ class BullMonitorCache {
             }
             if (rowsTNB) {
                 let data = rowsTNB;
-                let key = 'dg:bull:tb:periods:tnb', dataStr = JSON.stringify(data);
+                let key = 'pro:bull:tb:periods:tnb', dataStr = JSON.stringify(data);
                 let now = Date.now() / 1000, gameStart = data.begintime, gameEnd = data.endtime;
 
                 // 判断开始投注、停止投注
@@ -780,15 +794,34 @@ class BullMonitorCache {
 
                 await this.redis.client.set(key, dataStr);
             }
+
+            // hoo wallet
+            if (rowsSAT) {
+                let data = rowsTNB;
+                let key = 'hoo:bull:tb:periods:sat', dataStr = JSON.stringify(data);
+                let now = Date.now() / 1000, gameStart = data.begintime, gameEnd = data.endtime;
+
+                // 判断开始投注、停止投注
+                if (this.isHOOSATGameStarted && now >= gameEnd) {
+                    this.isHOOSATGameStarted = false;
+                    this.redis.pub.publish('HOOSATBullGameStop', dataStr);
+                } else if (!this.isHOOSATGameStarted && gameStart < now && now < gameEnd && data.status === 0) {
+                    this.isHOOSATGameStarted = true;
+                    this.redis.pub.publish('HOOSATBullGameStart', dataStr);
+                }
+
+                await this.redis.client.set(key, dataStr);
+            }
         } catch (err) {
-            this.log.error('catch error when update dragonex table periods:', err);
+            this.log.error('catch error when update table lperiods:', err);
             return false;
         }
     }
 
-    // 这里更新 pubkey 和 dealers 表
-    async updateTbOthers(dealers, dealersdgdt, dealersdgusdt, dealersdgeos, dealersdgsafe, dealersdgsnet, dealersdgtnb) {
+    // 这里更新 dealers 表
+    async updateTbOthers(dealers, dealersdgdt, dealersdgusdt, dealersdgeos, dealersdgsafe, dealersdgsnet, dealersdgtnb, dealershoosat) {
         try {
+            // eos mainnet
             if (dealers) {
                 let key = 'bull:tb:dealers', dataStr = JSON.stringify(dealers);
                 let exist = await this.redis.client.get(key);
@@ -799,8 +832,10 @@ class BullMonitorCache {
                     await this.redis.client.set(key, dataStr);
                 }
             }
+
+            // dragonex
             if (dealersdgdt) {
-                let key = 'dg:bull:tb:dealers:dt', dataStr = JSON.stringify(dealersdgdt);
+                let key = 'pro:bull:tb:dealers:dt', dataStr = JSON.stringify(dealersdgdt);
                 let exist = await this.redis.client.get(key);
 
                 // 检查龙网 dealers 表有更新则推送更新
@@ -810,7 +845,7 @@ class BullMonitorCache {
                 }
             }
             if (dealersdgusdt) {
-                let key = 'dg:bull:tb:dealers:usdt', dataStr = JSON.stringify(dealersdgusdt);
+                let key = 'pro:bull:tb:dealers:usdt', dataStr = JSON.stringify(dealersdgusdt);
                 let exist = await this.redis.client.get(key);
 
                 // 检查龙网 dealers 表有更新则推送更新
@@ -820,7 +855,7 @@ class BullMonitorCache {
                 }
             }
             if (dealersdgeos) {
-                let key = 'dg:bull:tb:dealers:eos', dataStr = JSON.stringify(dealersdgeos);
+                let key = 'pro:bull:tb:dealers:eos', dataStr = JSON.stringify(dealersdgeos);
                 let exist = await this.redis.client.get(key);
 
                 // 检查龙网 dealers 表有更新则推送更新
@@ -830,7 +865,7 @@ class BullMonitorCache {
                 }
             }
             if (dealersdgsafe) {
-                let key = 'dg:bull:tb:dealers:safe', dataStr = JSON.stringify(dealersdgsafe);
+                let key = 'pro:bull:tb:dealers:safe', dataStr = JSON.stringify(dealersdgsafe);
                 let exist = await this.redis.client.get(key);
 
                 // 检查龙网 dealers 表有更新则推送更新
@@ -840,7 +875,7 @@ class BullMonitorCache {
                 }
             }
             if (dealersdgsnet) {
-                let key = 'dg:bull:tb:dealers:snet', dataStr = JSON.stringify(dealersdgsnet);
+                let key = 'pro:bull:tb:dealers:snet', dataStr = JSON.stringify(dealersdgsnet);
                 let exist = await this.redis.client.get(key);
 
                 // 检查龙网 dealers 表有更新则推送更新
@@ -850,12 +885,24 @@ class BullMonitorCache {
                 }
             }
             if (dealersdgtnb) {
-                let key = 'dg:bull:tb:dealers:tnb', dataStr = JSON.stringify(dealersdgtnb);
+                let key = 'pro:bull:tb:dealers:tnb', dataStr = JSON.stringify(dealersdgtnb);
                 let exist = await this.redis.client.get(key);
 
                 // 检查龙网 dealers 表有更新则推送更新
                 if (!exist || String(exist) != String(dataStr)) {
                     this.redis.pub.publish('DGTNBBullDealersChange', dataStr);
+                    await this.redis.client.set(key, dataStr);
+                }
+            }
+
+            // hoo wallet
+            if (dealershoosat) {
+                let key = 'hoo:bull:tb:dealers:sat', dataStr = JSON.stringify(dealershoosat);
+                let exist = await this.redis.client.get(key);
+
+                // 检查虎符 dealers 表有更新则推送更新
+                if (!exist || String(exist) != String(dataStr)) {
+                    this.redis.pub.publish('HOOSATBullDealersChange', dataStr);
                     await this.redis.client.set(key, dataStr);
                 }
             }
