@@ -797,7 +797,7 @@ class BullMonitorCache {
 
             // hoo wallet
             if (rowsSAT) {
-                let data = rowsTNB;
+                let data = rowsSAT;
                 let key = 'hoo:bull:tb:periods:sat', dataStr = JSON.stringify(data);
                 let now = Date.now() / 1000, gameStart = data.begintime, gameEnd = data.endtime;
 
