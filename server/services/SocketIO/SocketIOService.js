@@ -265,10 +265,10 @@ class SocketIOService {
                 }
             });
             // 获取支付后结果
-            socket.on('getDGPlaybull', async (p) => {
+            socket.on('getProPlayBull', async (p) => {
                 let data = this.cacheSvc.getPlayRes(p);
                 if (socket.connected) {
-                    socket.emit('onDGPlaybull', data);
+                    socket.emit('onProPlayBull', data);
                 }
             });
             // ******************************* Pro End   ****************************
@@ -308,7 +308,7 @@ class SocketIOService {
         this.redis.sub.subscribe('NewBet', 'NewCashBet', 'NewChat', 'NewTopnRes', 'NewChatResult', 'NewestTopnRes',
                                  'BullResult', 'NewBullBet', 'BullGameStop', 'BullGameStart', 'BullDealersChange',
                                   // Pro
-                                 'DGPlayBull', 'ProBullResult', 'ProNewBullBet',
+                                 'ProPlayBull', 'ProBullResult', 'ProNewBullBet',
                                  'DGDTBullGameStop', 'DGDTBullGameStart', 'DGUSDTBullGameStop', 'DGUSDTBullGameStart', 'DGEOSBullGameStop', 'DGEOSBullGameStart',
                                  'DGSAFEBullGameStop', 'DGSAFEBullGameStart', 'DGSNETBullGameStop', 'DGSNETBullGameStart', 'DGTNBBullGameStop', 'DGTNBBullGameStart', 'HOOSATBullGameStop', 'HOOSATBullGameStart',
                                  'DGDTBullDealersChange', 'DGUSDTBullDealersChange', 'DGEOSBullDealersChange', 'DGSAFEBullDealersChange', 'DGSNETBullDealersChange', 'DGTNBBullDealersChange', 'HOOSATBullDealersChange',
@@ -412,8 +412,8 @@ class SocketIOService {
                         this.handleIO.emit(event, message);
                         break;
                     }
-                    case 'DGPlayBull': {
-                        this.handleIO.emit('onDGPlaybull', message);
+                    case 'ProPlayBull': {
+                        this.handleIO.emit('onProPlayBull', message);
                     }
                     // ******************************* Pro Start ****************************
                     default: {

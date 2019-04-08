@@ -573,7 +573,7 @@ class SocketIOCache {
             if (typeof params === 'string') {
                 let paramsJson = JSON.parse(params);
                 if (paramsJson.trade_no) {
-                    let key = `dg:play:result:${paramsJson.trade_no}`;
+                    let key = `pro:play:result:${paramsJson.trade_no}`;
                     ret = this.redis.client.get(key);
                 } else {
                     ret.msg = 'trade_no not found in params';
