@@ -897,7 +897,7 @@ class BullMonitorCache {
 
             // hoo wallet
             if (dealershoosat) {
-                let key = 'hoo:bull:tb:dealers:sat', dataStr = JSON.stringify(dealershoosat);
+                let key = 'pro:bull:tb:dealers:sat', dataStr = JSON.stringify(dealershoosat);
                 let exist = await this.redis.client.get(key);
 
                 // 检查虎符 dealers 表有更新则推送更新
