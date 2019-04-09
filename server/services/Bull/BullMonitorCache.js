@@ -798,7 +798,7 @@ class BullMonitorCache {
             // hoo wallet
             if (rowsSAT) {
                 let data = rowsSAT;
-                let key = 'hoo:bull:tb:periods:sat', dataStr = JSON.stringify(data);
+                let key = 'pro:bull:tb:periods:sat', dataStr = JSON.stringify(data);
                 let now = Date.now() / 1000, gameStart = data.begintime, gameEnd = data.endtime;
 
                 // 判断开始投注、停止投注
